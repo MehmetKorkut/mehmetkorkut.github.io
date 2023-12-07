@@ -2,7 +2,7 @@
 title: "About"
 excerpt: "About"
 sitemap: false
-permalink: /about.html
+permalink: /about/
 ---
 
 I am a highly skilled Data Analyst with a passion for transforming complex information into actionable insights. With a strong foundation in programming languages such as Python and R, coupled with data visualization tools like Tableau and Flourish, I have consistently delivered invaluable support to organizations by automating data analysis
