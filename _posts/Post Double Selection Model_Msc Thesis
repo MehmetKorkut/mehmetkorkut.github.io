@@ -9,6 +9,10 @@ pdf: "/assets/images/Thesis_Mehmet_Korkut.pdf"
 ## Msc Economics Thesis 
 <div style="text-align: justify;">
 ### Abstract
+
+...
+[Download PDF](/assets/images/Thesis_Mehmet_Korkut.pdf)
+...
 One of the main aspects of climate change is temperature rise. It has a direct effect on
 electricity consumption. This study investigates the relationship between electricity demand
 and temperature in Nordic countries which are Norway, Sweden, Finland and Denmark. I use
@@ -19,6 +23,5 @@ temperature rise has a negative effect below 20°C whereas the effect turns to p
 20°C. In addition, the strongest negative effect is seen between -10°C and 10°C due to intensity
 of diminishing heating effect. This study contributes to the literature methodologically
 </div>
-...
-[Download PDF](/assets/images/Thesis_Mehmet_Korkut.pdf)
-...
+![Nordic Electricity Consumption](/assets/images/Nordic_Electricity_Cons.png)
+
