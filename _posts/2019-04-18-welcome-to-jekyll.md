@@ -3,7 +3,7 @@ title: "Impact of Temperature Rise on Electricity Consumption of Nordic Countrie
 date: 2021-06-01T00:00:00+03:00
 categories:
   - portfolio
-pdf: "/assets/Thesis_Mehmet_Korkut.pdf"
+pdf: "/assets/images/Thesis_Mehmet_Korkut.pdf"
 ---
 
 ## Msc Economics Thesis 
@@ -19,3 +19,6 @@ temperature rise has a negative effect below 20°C whereas the effect turns to p
 20°C. In addition, the strongest negative effect is seen between -10°C and 10°C due to intensity
 of diminishing heating effect. This study contributes to the literature methodologically
 </div>
+...
+[Download PDF](/assets/images/Thesis_Mehmet_Korkut.pdf)
+...
