@@ -1,12 +1,12 @@
 ---
-title: "Welcome to Jekyll!"
-date: 2019-04-18T15:34:30-04:00
+title: "Impact of Temperature Rise on Electricity Consumption of Nordic Countries"
+date: 2021-06-01T00:00:00+03:00
 categories:
   - portfolio
-pdf: "/Projects-Articles/Thesis_Mehmet_Korkut.pdf"
+pdf: "/assets/Thesis_Mehmet_Korkut.pdf"
 ---
 
-## My Msc Economics Thesis - Impact of Temperature Rise on Electricity Consumption of Nordic Countries.
+## Msc Economics Thesis 
 <div style="text-align: justify;">
 ### Abstract
 One of the main aspects of climate change is temperature rise. It has a direct effect on
