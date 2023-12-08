@@ -59,7 +59,7 @@ plugins:
 
 author:
   name   : "Mehmet Korkut"
-  avatar : "/assets/images/MK.jpg"
+  avatar : "/assets/images/MK.png"
   bio    : "Data Analyst @SeeD"
   links:
     - label: "Website"
