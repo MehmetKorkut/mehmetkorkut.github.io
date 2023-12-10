@@ -9,7 +9,9 @@ tags:
   - K-means Clustering
 ---
 
-  
+[Check this link for the article and other codes in Github Repository](https://github.com/MehmetKorkut/-Coursera_Capstone)
+
+
 <center>
   <h1 style= "color:#FFC300">
       Segmenting and Clustering Neighborhoods in Toronto 
