@@ -12,6 +12,8 @@ tags:
 <h4>
   Check the code and explanations below. This analysis is used in an article.
 </h4>
+```
+{
 ``{r packages}
 library("dplyr")
 library("ggpubr")
@@ -229,4 +231,6 @@ Means below ;
 df2 %>%
   group_by(Group) %>%
   summarise_at(vars(Temp), list(name = mean),na.rm=TRUE)
+```
+}
 ```
