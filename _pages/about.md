@@ -5,6 +5,9 @@ sitemap: false
 permalink: /about/
 ---
 <div style="text-align: justify;">
-I am a highly skilled Data Analyst with a passion for transforming complex information into actionable insights. With a strong foundation in programming languages such as Python and R, coupled with data visualization tools like Tableau and Flourish, I have consistently delivered invaluable support to organizations by automating data analysis
-processes, enhancing data quality, and fostering data‑driven decision‑making. With a Master’s in Economics with a specialization in Data Science from Tilburg University and a Bachelor’s in Economics from Middle East Technical University, my academic background complements my practical skills. Furthermore, my pursuit of continuous learning is underscored by a robust set of certifications in data science. In addition to my professional accomplishments, I have undertaken personal projects addressing climate insights and stock market analysis, showcasing my commitment to using data to address real‑world challenges. With strong soft skills including presentation, problem‑solving, critical thinking, and decision‑making, I am well‑equipped to drive data‑driven innovation and informed decision‑making i n any organization
+Embark on a journey through the world of data with me, a seasoned Data Analyst armed with a formidable arsenal of knowledge and analytical prowess. I am on a perpetual quest to unearth opportunities where the alchemy of data-driven applications can transmute the ordinary into the extraordinary, catalyzing profound transformations in decision-making and development.
+
+My academic voyage has been a relentless pursuit of excellence. Armed with a Master's degree in Economics, my voyage was embellished with a track specialization in Data Science from the prestigious Tilburg University. Complementing this formidable foundation, my Bachelor of Science degree in Economics, meticulously earned at Middle East Technical University, adds a distinctive layer to my expertise.
+
+My aspiration knows no bounds, as I relentlessly strive to extend my skills, broaden my knowledge, and amass invaluable experience. My unwavering goal is to ascend to the zenith of data-driven decision-making, where I shall emerge as an unassailable expert, forging the future through the power of data.
 </div>
