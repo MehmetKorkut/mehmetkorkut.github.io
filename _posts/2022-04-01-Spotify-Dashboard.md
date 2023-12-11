@@ -20,7 +20,7 @@ tags:
 </center>
 
 The code source in this project is from https://towardsdatascience.com/visualizing-spotify-data-with-python-tableau-687f2f528cdd. It belongs to Anne Bode. I only made a few changes because of the problems occured due to my data. The main reason why I did this is that I think it is fun to see my music data visually and learning tableau at the same time.
-
+```
 #packages
   import pandas as pd
   import numpy as np
@@ -115,6 +115,7 @@ The code source in this project is from https://towardsdatascience.com/visualizi
   # save df_tableau and df_genre_expanded as csv files that we can load into Tableau
   df_tableau.to_csv('MySpotifyDataTable.csv')
   df_genre_expanded.to_csv('GenresExpandedTable.csv')
+```
   
   print('done')
 Until this part, I prepared and export the data for the usage in Tableau. After this, I used Tableau Public program to make some visualizations.
