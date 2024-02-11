@@ -5,7 +5,6 @@ categories:
   - Portfolio
 tags:
   - Data Visualization
-  - Data Storytelling
 ---
 
 When I started learning Data Visualization for the first time in my third year in Bachelors degree, I was amazed by ggplot2 visuals. It was a informative 
