@@ -20,4 +20,4 @@ If you read my bias breaking story, we can move to the project idea. I was readi
 year' article by Ivan Krastev and Mark Leonard. 
 I checked all the survey data visualizations and thought about replacing some of them with some data visualizations I made in Powerpoint. The scenario is that
 I am presenting the survey results to general audience in a big room and trying to make poeple spend time on the visual and think instead of presenting them
-a table. 
+a table. Check some of my visuals below;
