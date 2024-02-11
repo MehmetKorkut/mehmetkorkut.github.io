@@ -1,5 +1,5 @@
 ---
-title: "Empowering Narratives: Unveiling Europe’s Election Year Trauma through Dynamic Data Storytelling in PowerPoint"
+title: "Dynamic Data Storytelling in PowerPoint:Europe’s Election Year Trauma"
 date: 2024-01-1
 categories:
   - Portfolio
