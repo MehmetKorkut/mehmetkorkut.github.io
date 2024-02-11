@@ -17,7 +17,7 @@ data to general audience? The answer is Powerpoint. It sounds a bit odd to peopl
 to make awesome fancy data visualizations. I realized this when I got trained by Addtwo Digital. I was amazed by how easily you can create a very different
 looking data visual. (and it is looking amazing!)
 If you read my bias breaking story, we can move to the project idea. I was reading 'A crisis of one’s own: The politics of trauma in Europe’s election 
-year' article by Ivan Krastev and Mark Leonard. ([Link](https://ecfr.eu/publication/a-crisis-of-ones-own-the-politics-of-trauma-in-europes-election-year/)).
+year' article by Ivan Krastev and Mark Leonard. 
 I checked all the survey data visualizations and thought about replacing some of them with some data visualizations I made in Powerpoint. The scenario is that
 I am presenting the survey results to general audience in a big room and trying to make poeple spend time on the visual and think instead of presenting them
 a table. 
