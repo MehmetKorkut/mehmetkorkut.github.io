@@ -1,6 +1,6 @@
 ---
 title: "Dynamic Data Storytelling in PowerPoint:Europe’s Election Year Trauma"
-date: 2024-01-1
+date: 2024-02-10
 categories:
   - Portfolio
 tags:
