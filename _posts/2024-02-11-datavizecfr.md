@@ -4,7 +4,6 @@ date: 2024-01-1
 categories:
   - Portfolio
 tags:
-  - Powerpoint
   - Data Visualization
   - Data Storytelling
 ---
