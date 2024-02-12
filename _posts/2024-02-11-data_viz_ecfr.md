@@ -21,3 +21,13 @@ year' article by Ivan Krastev and Mark Leonard.
 I checked all the survey data visualizations and thought about replacing some of them with some data visualizations I made in Powerpoint. The scenario is that
 I am presenting the survey results to general audience in a big room and trying to make poeple spend time on the visual and think instead of presenting them
 a table. Check some of my visuals below;
+
+![Polar Area](assets/images/pie_f.png)
+![Waffle Chart 1](assets/images/waffle1.png)
+![Bubble Table](assets/images/bubble_f.png)
+![Proportional Pyramids](assets/images/bar_f.png)
+![Pyramid Charts](assets/images/bar_com_f.png)
+![Waffle Chart 2](assets/images/waffle2.png)
+
+
+
