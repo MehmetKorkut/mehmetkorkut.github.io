@@ -22,17 +22,13 @@ I checked all the survey data visualizations and thought about replacing some of
 I am presenting the survey results to general audience in a big room and trying to make poeple spend time on the visual and think instead of presenting them
 a table. Check some of my visuals below;
 
-![Polar Area](assets/images/pie_f.png)
+<img src="assets/images/pie_f.png" alt="Polar Area">
+<img src="assets/images/waffle1.png" alt="Waffle Chart 1">
+<img src="assets/images/bubble_f.png" alt="Bubble Table">
+<img src="assets/images/bar_f.png" alt="Proportional Pyramids">
+<img src="assets/images/bar_com_f.png" alt="Pyramid Charts">
+<img src="assets/images/waffle2.png" alt="Waffle Chart 2">
 
-![Waffle Chart 1](assets/images/waffle1.png)
-
-![Bubble Table](assets/images/bubble_f.png)
-
-![Proportional Pyramids](assets/images/bar_f.png)
-
-![Pyramid Charts](assets/images/bar_com_f.png)
-
-![Waffle Chart 2](assets/images/waffle2.png)
 
 
 
