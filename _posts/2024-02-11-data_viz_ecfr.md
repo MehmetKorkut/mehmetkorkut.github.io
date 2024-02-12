@@ -23,10 +23,15 @@ I am presenting the survey results to general audience in a big room and trying 
 a table. Check some of my visuals below;
 
 ![Polar Area](assets/images/pie_f.png)
+
 ![Waffle Chart 1](assets/images/waffle1.png)
+
 ![Bubble Table](assets/images/bubble_f.png)
+
 ![Proportional Pyramids](assets/images/bar_f.png)
+
 ![Pyramid Charts](assets/images/bar_com_f.png)
+
 ![Waffle Chart 2](assets/images/waffle2.png)
 
 
