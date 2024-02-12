@@ -30,7 +30,6 @@ a table. Check some of my visuals below;
 ![Waffle Chart 2](../assets/images/waffle2.png)
 
 
-<img src="assets/images/waffle2.png" alt="Waffle Chart 2">
 
 
 
