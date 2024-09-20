@@ -21,7 +21,8 @@ github_username: MehmetKorkut
 minimal_mistakes_skin: dirt
 search: true
 header:
-  image: assets/images/header.jpg
+  overlay_image: assets/images/header.jpg
+  overlay_filter: 0.4
 
 
 # Build settings
