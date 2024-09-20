@@ -20,8 +20,6 @@ twitter_username: MehmetK85110144
 github_username: MehmetKorkut
 minimal_mistakes_skin: dirt
 search: true
-header:
-    image: /assets/images/header.jpg
 
 
 # Build settings
@@ -75,6 +73,8 @@ author:
     - label: "Instagram"
       icon: "fab fa-fw fa-instagram"
       url: "https://www.instagram.com/memokorkut/"
+header:
+    image: /assets/images/header.jpg
 
 footer:
   links:
