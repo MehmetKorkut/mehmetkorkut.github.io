@@ -74,7 +74,8 @@ author:
       icon: "fab fa-fw fa-instagram"
       url: "https://www.instagram.com/memokorkut/"
 header:
-  - image: "/assets/images/header.jpg"
+  image: "/assets/images/header.jpg"
+
 
 footer:
   links:
