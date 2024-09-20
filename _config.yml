@@ -20,6 +20,7 @@ twitter_username: MehmetK85110144
 github_username: MehmetKorkut
 minimal_mistakes_skin: dirt
 search: true
+excerpt: "This post should display a **header with an overlay image**, if the theme supports it.
 header:
   overlay_image: assets/images/header.jpg
   overlay_filter: 0.4
