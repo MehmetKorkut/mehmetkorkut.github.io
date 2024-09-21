@@ -19,6 +19,8 @@ description: Welcome to my personal website! Check posts to see my Portfolio Pro
 twitter_username: MehmetK85110144
 github_username: MehmetKorkut
 minimal_mistakes_skin: dirt
+header:
+  image: "/assets/images/header.jpg"
 search: true
 
 
@@ -73,8 +75,6 @@ author:
     - label: "Instagram"
       icon: "fab fa-fw fa-instagram"
       url: "https://www.instagram.com/memokorkut/"
-header:
-  image: "/assets/images/header.jpg"
 
 
 footer:
