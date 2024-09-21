@@ -18,11 +18,11 @@ email: mehmetkorkut77@gmail.com
 description: Welcome to my personal website! Check posts to see my Portfolio Projects and Blog. You can find my CV and more information about me on About section.
 twitter_username: MehmetK85110144
 github_username: MehmetKorkut
-minimal_mistakes_skin: dirt
+minimal_mistakes_skin: default
 header:
   image: "/assets/images/header.jpg"
 search: true
-
+teaser: "/assets/images/header.jpg"
 
 # Build settings
 markdown: kramdown
