@@ -17,8 +17,11 @@ rate data from Yahoo Finance, respectively. The latest_rate reactive expression 
 the retrieval of historical rates dating back to 2010. The UI features a text output displaying the most recent exchange rate and an interactive time series graph 
 showcasing the historical exchange rates, generated using the dygraphs package. This setup ensures real-time data updates and provides users with a comprehensive 
 view of the EUR/TRY exchange rate trends.
+
 ### The Code
-```{r shiny, include = TRUE}
+
+```
+
 # Install necessary packages
 install.packages("shiny")
 install.packages("quantmod")
@@ -111,5 +114,6 @@ server <- function(input, output) {
 
 # Run the app
 shinyApp(ui = ui, server = server)
+
 ```
 ![Shiny App](/assets/images/shiny_app_pic.png)
