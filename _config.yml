@@ -14,6 +14,7 @@
 # You can create any custom variable you would like, and they will be accessible
 # in the templates via {{ site.myvariable }}.
 title: Mehmet Korkut
+layout: default 
 email: mehmetkorkut77@gmail.com
 description: Welcome to my personal website! Check posts to see my Portfolio Projects and Blog. You can find my CV and more information about me on About section.
 twitter_username: MehmetK85110144
