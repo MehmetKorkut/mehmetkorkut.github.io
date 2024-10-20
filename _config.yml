@@ -124,5 +124,5 @@ tag_archive:
   path: /tags/
 portfolio_archive:
   type: liquid
-  path: /tags/
+  path: /portfolio/
 
