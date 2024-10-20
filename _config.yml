@@ -122,3 +122,13 @@ category_archive:
 tag_archive:
   type: liquid
   path: /tags/
+
+   # portfolio
+  - scope:
+      path: /portfolio/
+      type: portfolio
+    values:
+      author_profile: false
+      excerpt: ""
+      sidebar:
+        nav: "portfolio"
