@@ -1,9 +1,6 @@
 main:
   - title: "Portfolio"
     url: /posts/
-     children:
-      - title: "Anomaly Detection in Social Networks"
-        url: /portfolio/Shiny-first/
   - title: "Tags"
     url: /tags/
   - title: "About"
