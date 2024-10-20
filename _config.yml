@@ -98,8 +98,8 @@ footer:
 defaults:
   # _posts
   - scope:
-      path: ""
-      type: posts
+      path: "portfolio"
+      type: portfolio
     values:
       layout: single
       author_profile: true
