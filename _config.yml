@@ -13,7 +13,7 @@
 # you will see them accessed via {{ site.title }}, {{ site.email }}, and so on.
 # You can create any custom variable you would like, and they will be accessible
 # in the templates via {{ site.myvariable }}.
-title: "Memo's Notebook"
+title: "Mehmet's Analytics Hub"
 layout: default 
 email: mehmetkorkut77@gmail.com
 description: Welcome to my personal website! Check posts to see my Portfolio Projects and Blog. You can find my CV and more information about me on About section.
