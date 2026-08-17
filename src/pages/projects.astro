@@ -1,0 +1,115 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { getCollection } from 'astro:content';
+
+const projects = (await getCollection('projects')).sort(
+	(a, b) => b.data.date.valueOf() - a.data.date.valueOf()
+);
+
+const featured = projects.find((p) => p.data.featured) ?? projects[0];
+const rest = projects.filter((p) => p.id !== featured?.id);
+
+const dateFmt = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' });
+---
+
+<Layout
+	title="Projects — The Laboratory"
+	description="Technical breakdowns of data science systems — LTV forecasting, quality-score indices, and personal data experiments."
+>
+	<main class="mx-auto max-w-5xl px-6 py-12 sm:py-16">
+		<header class="mb-12 border-b border-charcoal/10 pb-8">
+			<p class="text-xs font-semibold tracking-[0.3em] text-rust uppercase">The Laboratory</p>
+			<h1 class="mt-3 font-serif text-4xl text-charcoal sm:text-5xl">Projects</h1>
+			<p class="mt-4 max-w-2xl font-serif text-lg leading-relaxed text-charcoal/75">
+				Production-grade data science systems, taken apart. The methods that worked, the ones that
+				didn't, and the reasoning in between.
+			</p>
+		</header>
+
+		<!-- Featured project -->
+		{
+			featured && (
+				<section class="mb-16">
+					<div class="rounded-md border border-forest/25 bg-forest/[0.04] p-7 sm:p-9">
+						<div class="flex flex-wrap items-center gap-3">
+							<span class="rounded-full bg-forest px-3 py-0.5 text-xs font-semibold tracking-wide text-paper uppercase">
+								Featured
+							</span>
+							<span class="text-sm text-charcoal/50">{dateFmt.format(featured.data.date)}</span>
+						</div>
+						<h2 class="mt-4 font-serif text-3xl leading-tight text-charcoal">
+							{featured.data.title}
+						</h2>
+						<p class="mt-4 max-w-3xl font-serif text-lg leading-relaxed text-charcoal/80">
+							{featured.data.description}
+						</p>
+
+						<div class="mt-6 grid gap-6 sm:grid-cols-2">
+							<div>
+								<p class="mb-2 text-xs font-semibold tracking-[0.15em] text-forest uppercase">
+									Methodology
+								</p>
+								<ul class="flex flex-wrap gap-2">
+									{featured.data.methodology.map((m) => (
+										<li class="rounded-full border border-forest/30 px-2.5 py-0.5 text-xs font-medium text-forest">
+											{m}
+										</li>
+									))}
+								</ul>
+							</div>
+							<div>
+								<p class="mb-2 text-xs font-semibold tracking-[0.15em] text-rust uppercase">
+									Tech Stack
+								</p>
+								<ul class="flex flex-wrap gap-2">
+									{featured.data.techStack.map((t) => (
+										<li class="rounded-full bg-charcoal/[0.06] px-2.5 py-0.5 text-xs font-medium text-charcoal/70">
+											{t}
+										</li>
+									))}
+								</ul>
+							</div>
+						</div>
+
+						{featured.id === 'triathlon-analytics' && (
+							<a
+								href="/multisport"
+								class="mt-7 inline-flex items-center gap-2 rounded-full bg-forest px-5 py-2 text-sm font-semibold text-paper transition-opacity hover:opacity-90"
+							>
+								Explore the dashboard
+								<span aria-hidden="true">&rarr;</span>
+							</a>
+						)}
+					</div>
+				</section>
+			)
+		}
+
+		<!-- Other projects -->
+		{
+			rest.length > 0 && (
+				<section class="mb-16">
+					<div class="grid gap-6 sm:grid-cols-2">
+						{rest.map((project) => (
+							<article class="flex flex-col rounded-md border border-charcoal/10 bg-paper p-6 transition-colors hover:border-forest/40">
+								<span class="text-sm text-charcoal/50">{dateFmt.format(project.data.date)}</span>
+								<h3 class="mt-2 font-serif text-xl text-charcoal">{project.data.title}</h3>
+								<p class="mt-2 flex-1 font-serif text-[0.98rem] leading-relaxed text-charcoal/75">
+									{project.data.description}
+								</p>
+								<ul class="mt-4 flex flex-wrap gap-2">
+									{project.data.techStack.slice(0, 4).map((t) => (
+										<li class="rounded-full bg-charcoal/[0.06] px-2.5 py-0.5 text-xs font-medium text-charcoal/70">
+											{t}
+										</li>
+									))}
+								</ul>
+							</article>
+						))}
+					</div>
+				</section>
+			)
+		}
+
+	</main>
+</Layout>

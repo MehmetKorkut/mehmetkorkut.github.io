@@ -1,0 +1,125 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+const contact = [
+	{ value: 'korkuttmehmet@outlook.com', href: 'mailto:korkuttmehmet@outlook.com' },
+	{ value: 'linkedin.com/in/mehmet-korkut', href: 'https://linkedin.com/in/mehmet-korkut' },
+	{ value: 'github.com/MehmetKorkut', href: 'https://github.com/MehmetKorkut' },
+	{ value: 'Nicosia, Cyprus', href: null },
+];
+
+const experience = [
+	{
+		role: 'Marketing Data Analyst',
+		company: 'Nexxie Group (Redwalking)',
+		period: 'Sep 2025 – Present',
+	},
+	{
+		role: 'Data Analyst',
+		company: 'Centre for Sustainable Peace and Democratic Development',
+		period: 'Apr 2022 – Sep 2025',
+	},
+	{
+		role: 'Data Analyst',
+		company: 'Cyprus Dialogue Forum',
+		period: 'Jun 2022 – Apr 2023',
+	},
+];
+
+const education = [
+	{ degree: 'MSc Economics — Data Science specialization', school: 'Tilburg University' },
+	{ degree: 'BSc Economics', school: 'Middle East Technical University' },
+];
+
+const skills = [
+	{ label: 'Programming', items: 'Python · R' },
+	{ label: 'Databases & Querying', items: 'SQL · MongoDB · Studio 3T' },
+	{ label: 'Tools & BI', items: 'Power BI · Tableau · Excel · R Studio · MS 365' },
+];
+---
+
+<Layout
+	title="Résumé — Mehmet Korkut"
+	description="Data analyst — a short résumé: experience, education, and skills."
+>
+	<main class="mx-auto max-w-2xl px-6 py-12 sm:py-16">
+		<!-- Masthead -->
+		<header class="border-b border-charcoal/15 pb-8">
+			<h1 class="font-serif text-4xl text-charcoal sm:text-5xl">Mehmet Korkut</h1>
+			<p class="mt-2 text-sm font-semibold tracking-[0.2em] text-rust uppercase">Data Analyst</p>
+			<div class="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-charcoal/60">
+				{
+					contact.map((c, i) => (
+						<>
+							{i > 0 && <span class="text-charcoal/25" aria-hidden="true">·</span>}
+							{c.href ? (
+								<a href={c.href} class="text-forest hover:underline">
+									{c.value}
+								</a>
+							) : (
+								<span>{c.value}</span>
+							)}
+						</>
+					))
+				}
+			</div>
+		</header>
+
+		<!-- Profile -->
+		<section class="border-b border-charcoal/10 py-8">
+			<p class="font-serif text-lg leading-relaxed text-charcoal/80">
+				Data analyst with a Master's in Economics (Data Science specialization) and four years across
+				marketing analytics, program evaluation, and policy research — working mostly in Python, R,
+				SQL, Power BI, and Tableau.
+			</p>
+		</section>
+
+		<!-- Experience -->
+		<section class="border-b border-charcoal/10 py-8">
+			<h2 class="mb-5 text-xs font-semibold tracking-[0.25em] text-forest uppercase">Experience</h2>
+			<div>
+				{
+					experience.map((job) => (
+						<article class="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 border-t border-charcoal/10 py-4 first:border-t-0 first:pt-0">
+							<div>
+								<h3 class="font-serif text-lg leading-snug text-charcoal">{job.role}</h3>
+								<p class="text-sm text-charcoal/60">{job.company}</p>
+							</div>
+							<span class="shrink-0 text-sm text-charcoal/45">{job.period}</span>
+						</article>
+					))
+				}
+			</div>
+		</section>
+
+		<!-- Education -->
+		<section class="border-b border-charcoal/10 py-8">
+			<h2 class="mb-5 text-xs font-semibold tracking-[0.25em] text-forest uppercase">Education</h2>
+			<div>
+				{
+					education.map((ed) => (
+						<article class="border-t border-charcoal/10 py-4 first:border-t-0 first:pt-0">
+							<h3 class="font-serif text-lg leading-snug text-charcoal">{ed.degree}</h3>
+							<p class="text-sm text-charcoal/60">{ed.school}</p>
+						</article>
+					))
+				}
+			</div>
+		</section>
+
+		<!-- Skills -->
+		<section class="py-8">
+			<h2 class="mb-5 text-xs font-semibold tracking-[0.25em] text-forest uppercase">Skills</h2>
+			<div class="space-y-3">
+				{
+					skills.map((group) => (
+						<p class="text-[0.95rem] text-charcoal/80">
+							<span class="text-charcoal/45">{group.label} — </span>
+							{group.items}
+						</p>
+					))
+				}
+			</div>
+		</section>
+	</main>
+</Layout>

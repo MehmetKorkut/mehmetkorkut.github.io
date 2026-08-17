@@ -1,0 +1,264 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { getCollection } from 'astro:content';
+import summary from '../data/activities-summary.json';
+import SignalFeed from '../components/SignalFeed.astro';
+import type { FeedItem } from '../components/SignalFeed.astro';
+import { shelf } from '../data/shelf';
+
+const albums = await getCollection('albums');
+const projects = await getCollection('projects');
+
+const spotlight = albums.find((a) => a.data.spotlight) ?? albums[0];
+const featured = projects.find((p) => p.data.featured) ?? projects[0];
+
+// ---- Signal feed: one live pull from each corner of the site ----
+const monthFmt = new Intl.DateTimeFormat('en-US', { month: 'short', year: 'numeric' });
+
+const latestPost = (await getCollection('blog'))
+	.filter((p) => p.data.lang !== 'en')
+	.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())[0];
+
+const currentBook = shelf[0];
+
+const topAlbum =
+	[...albums].sort((a, b) => b.data.rating - a.data.rating || b.data.releaseYear - a.data.releaseYear)[0];
+
+// Most-recent logged activity (the array is ordered newest-first).
+const lastActivity = summary.activities[0];
+const paceLabel = (secs: number, km: number) => {
+	if (!km) return `${Math.round(secs / 60)} min`;
+	const perKm = secs / km;
+	const m = Math.floor(perKm / 60);
+	const s = Math.round(perKm % 60);
+	return `${km.toFixed(1)} km · ${m}:${String(s).padStart(2, '0')}/km`;
+};
+const workoutMeta = lastActivity
+	? `${paceLabel(lastActivity.s, lastActivity.km)} · ${monthFmt.format(new Date(lastActivity.y, lastActivity.m - 1))}`
+	: 'Training log';
+
+const feedItems: FeedItem[] = [
+	latestPost && {
+		kind: 'writing' as const,
+		label: 'Writing',
+		title: latestPost.data.title,
+		meta: monthFmt.format(latestPost.data.date),
+		href: `/blog/${latestPost.id}`,
+		accent: 'forest' as const,
+	},
+	currentBook && {
+		kind: 'reading' as const,
+		label: 'Reading',
+		title: currentBook.title,
+		meta: currentBook.author ?? 'On the desk now',
+		href: '/books',
+		accent: 'rust' as const,
+	},
+	topAlbum && {
+		kind: 'listening' as const,
+		label: 'Listening',
+		title: topAlbum.data.title,
+		meta: `${topAlbum.data.artist} · ${'●'.repeat(topAlbum.data.rating)}`,
+		href: '/wall-of-sound',
+		accent: 'forest' as const,
+	},
+	lastActivity && {
+		kind: 'training' as const,
+		label: 'Training',
+		title: `Latest ${lastActivity.t.toLowerCase()}`,
+		meta: workoutMeta,
+		href: '/projects',
+		accent: 'forest' as const,
+	},
+].filter(Boolean) as FeedItem[];
+
+// Training-split preview for The Laboratory card (real discipline share of hours).
+const disc = summary.disciplines;
+const totalHours = disc.Run.hours + disc.Ride.hours + disc.Swim.hours + disc.Other.hours;
+const split = [
+	{ label: 'Ride', color: 'var(--color-forest)', pct: (disc.Ride.hours / totalHours) * 100 },
+	{ label: 'Run', color: 'var(--color-rust)', pct: (disc.Run.hours / totalHours) * 100 },
+	{ label: 'Swim', color: 'var(--color-charcoal)', pct: (disc.Swim.hours / totalHours) * 100 },
+	{ label: 'Other', color: '#cfc9bd', pct: (disc.Other.hours / totalHours) * 100 },
+];
+
+const ratingDots = (rating: number) => Array.from({ length: 5 }, (_, i) => i < rating);
+---
+
+<Layout
+	title="Mehmet Korkut"
+	description="A digital home at the intersection of data science, economics, and heavy music. Diary, data projects, and a metal album rotation."
+>
+	<SignalFeed items={feedItems} />
+
+	<main class="mx-auto max-w-5xl px-6 py-12 sm:py-16">
+		<div class="grid auto-rows-[minmax(11rem,auto)] grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+			<!-- A · Feature / Introduction -->
+			<section
+				class="flex flex-col justify-between rounded-md border border-charcoal/10 bg-paper p-7 sm:col-span-2 lg:row-span-2"
+			>
+				<p class="text-xs font-semibold tracking-[0.3em] text-rust uppercase">Logbook</p>
+				<div class="my-6">
+					<h1 class="font-serif text-4xl leading-[1.1] text-charcoal sm:text-5xl">
+						Signal, Sound, and the Spaces Between
+					</h1>
+					<p class="mt-6 max-w-xl font-serif text-lg leading-relaxed text-charcoal/80">
+						A running record of one life, paid attention to. By day I look for signal in the noise
+						&mdash; data, models, and the questions underneath them. Away from the desk the same habit
+						picks up a guitar, a book, a long road. The subjects change; the instinct doesn't &mdash;
+						look closely, then look again.
+					</p>
+				</div>
+				<ul class="flex flex-wrap gap-2">
+					{
+						['Data Science', 'Economics', 'Electric Guitar', 'Heavy Metal'].map((tag) => (
+							<li class="rounded-full border border-forest/30 px-3 py-1 text-xs font-medium text-forest">
+								{tag}
+							</li>
+						))
+					}
+				</ul>
+			</section>
+
+			<!-- B · The Laboratory (Projects) -->
+			<a
+				href="/projects"
+				class="group flex flex-col justify-between rounded-md border border-charcoal/10 bg-paper p-7 transition-colors hover:border-forest/40 sm:col-span-2"
+			>
+				<div class="flex items-start justify-between gap-4">
+					<div>
+						<p class="text-xs font-semibold tracking-[0.2em] text-forest uppercase">
+							The Laboratory
+						</p>
+						<h2 class="mt-2 font-serif text-xl text-charcoal">{featured?.data.title}</h2>
+					</div>
+					<span
+						class="shrink-0 text-charcoal/30 transition group-hover:translate-x-0.5 group-hover:text-forest"
+						aria-hidden="true">&rarr;</span
+					>
+				</div>
+				<!-- Training-split preview: real Swim / Bike / Run share of logged hours -->
+				<div class="mt-5">
+					<div class="flex items-center justify-between">
+						<p class="text-[0.7rem] font-semibold tracking-[0.15em] text-charcoal/45 uppercase">
+							Training split
+						</p>
+						<p class="text-[0.7rem] text-charcoal/40">{Math.round(totalHours)} hrs logged</p>
+					</div>
+					<div class="mt-2 flex h-2.5 gap-1 overflow-hidden">
+						{
+							split.map((s) => (
+								<span
+									class="h-full rounded-full transition-[width] duration-500"
+									style={`width:${s.pct}%;background:${s.color}`}
+								/>
+							))
+						}
+					</div>
+					<ul class="mt-3 flex flex-wrap gap-x-4 gap-y-1">
+						{
+							split
+								.filter((s) => s.label !== 'Other')
+								.map((s) => (
+									<li class="flex items-center gap-1.5 text-xs text-charcoal/60">
+										<span class="h-2 w-2 rounded-full" style={`background:${s.color}`} />
+										<span class="font-medium text-charcoal/75">{s.label}</span>
+										<span class="text-charcoal/45">{Math.round(s.pct)}%</span>
+									</li>
+								))
+						}
+					</ul>
+				</div>
+				<p class="mt-4 text-sm text-charcoal/55">
+					Interactive dashboards and personal data experiments, built in D3.js and Python.
+				</p>
+			</a>
+
+			<!-- C · Heavy Rotation (Wall of Sound) — softened forest accent card -->
+			<a
+				href="/wall-of-sound"
+				class="group flex flex-col justify-between rounded-md bg-forest/85 p-6 text-paper transition-transform hover:-translate-y-0.5"
+			>
+				<p class="text-xs font-semibold tracking-[0.2em] text-paper/70 uppercase">Heavy Rotation</p>
+				{
+					spotlight && (
+						<div class="mt-3">
+							<img
+								src={spotlight.data.coverImage}
+								alt={`${spotlight.data.title} cover art`}
+								class="aspect-square w-full rounded-sm object-cover ring-1 ring-paper/20"
+								loading="lazy"
+							/>
+							<h2 class="mt-3 font-serif text-lg leading-tight">{spotlight.data.title}</h2>
+							<p class="text-sm text-paper/70">{spotlight.data.artist}</p>
+							<div
+								class="mt-2 flex gap-1"
+								aria-label={`Rating: ${spotlight.data.rating} out of 5`}
+							>
+								{ratingDots(spotlight.data.rating).map((filled) => (
+									<span
+										class:list={[
+											'h-2 w-2 rounded-full',
+											filled ? 'bg-rust' : 'bg-paper/25',
+										]}
+									/>
+								))}
+							</div>
+						</div>
+					)
+				}
+			</a>
+
+			<!-- D · The Blog -->
+			<a
+				href="/blog"
+				class="group flex flex-col overflow-hidden rounded-md border border-charcoal/10 bg-paper p-6 transition-colors hover:border-forest/40"
+			>
+				<div class="flex items-start justify-between">
+					<p class="text-xs font-semibold tracking-[0.2em] text-forest uppercase">Writing</p>
+					<span
+						class="text-charcoal/30 transition group-hover:translate-x-0.5 group-hover:text-forest"
+						aria-hidden="true">&rarr;</span
+					>
+				</div>
+				<div>
+					<h2 class="font-serif text-xl text-charcoal">The Blog</h2>
+					<p class="mt-2 text-sm text-charcoal/55">
+						Essays and notes on data, economics, and the craft of paying attention.
+					</p>
+				</div>
+
+				<!-- Illustrated shelf: book spines in the site palette -->
+				<div class="-mx-6 -mb-6 mt-auto bg-forest/[0.05] px-5 pt-5">
+					<svg
+						viewBox="0 0 260 68"
+						class="h-16 w-full"
+						preserveAspectRatio="xMidYMax meet"
+						aria-hidden="true"
+					>
+						<g>
+							<rect x="6" y="20" width="17" height="42" rx="1.5" fill="#2f4a3d"></rect>
+							<rect x="25" y="10" width="12" height="52" rx="1.5" fill="#a8471f"></rect>
+							<rect x="39" y="26" width="20" height="36" rx="1.5" fill="#cfc9bd"></rect>
+							<rect x="61" y="16" width="14" height="46" rx="1.5" fill="#2b2b2b"></rect>
+							<rect x="77" y="6" width="11" height="56" rx="1.5" fill="#2f4a3d" fill-opacity="0.6"></rect>
+							<rect x="90" y="24" width="21" height="38" rx="1.5" fill="#a8471f" fill-opacity="0.55"></rect>
+							<rect x="113" y="14" width="15" height="48" rx="1.5" fill="#2b2b2b" fill-opacity="0.5"></rect>
+							<rect x="130" y="22" width="13" height="40" rx="1.5" fill="#2f4a3d"></rect>
+							<rect x="145" y="8" width="18" height="54" rx="1.5" fill="#cfc9bd"></rect>
+							<rect x="165" y="18" width="12" height="44" rx="1.5" fill="#a8471f"></rect>
+							<rect x="179" y="12" width="20" height="50" rx="1.5" fill="#2f4a3d" fill-opacity="0.5"></rect>
+							<!-- a leaning book for character -->
+							<rect x="201" y="16" width="13" height="46" rx="1.5" fill="#2b2b2b" transform="rotate(7 207 62)"></rect>
+							<rect x="220" y="24" width="16" height="38" rx="1.5" fill="#a8471f" fill-opacity="0.65"></rect>
+							<rect x="238" y="14" width="14" height="48" rx="1.5" fill="#2f4a3d"></rect>
+						</g>
+						<!-- shelf line -->
+						<rect x="0" y="62" width="260" height="2.5" rx="1" fill="#2b2b2b" fill-opacity="0.18"></rect>
+					</svg>
+				</div>
+			</a>
+
+		</div>
+	</main>
+</Layout>

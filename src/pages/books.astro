@@ -1,0 +1,86 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { library } from '../data/library';
+import { shelf } from '../data/shelf';
+
+// ── Update this each year ─────────────────────────────────────────────
+// Books finished so far this calendar year, and the year it counts for.
+const booksThisYear = { count: 15, year: 2026 };
+// ──────────────────────────────────────────────────────────────────────
+
+const readBooks = library;
+---
+
+<Layout
+	title="Books"
+	description="What I'm reading now, what I've read, and how many books I've finished this year."
+>
+	<main class="mx-auto max-w-2xl px-6 py-12 sm:py-16">
+		<header>
+			<p class="text-xs font-semibold tracking-[0.3em] text-rust uppercase">Reading</p>
+			<h1 class="mt-3 font-serif text-4xl text-charcoal sm:text-5xl">Books</h1>
+			<p class="mt-4 font-serif text-lg leading-relaxed text-charcoal/70">
+				A quiet record of what's open on the desk and what I've closed for good.
+			</p>
+		</header>
+
+		<!-- Count for the year -->
+		<div class="mt-10 flex items-end gap-4 border-y border-charcoal/10 py-7">
+			<span class="font-serif text-6xl leading-none text-rust sm:text-7xl">{booksThisYear.count}</span>
+			<span class="pb-1.5 text-sm leading-tight text-charcoal/55">
+				books read<br />in {booksThisYear.year}
+			</span>
+		</div>
+
+		<!-- Currently reading -->
+		<section class="mt-14">
+			<h2 class="text-xs font-semibold tracking-[0.2em] text-forest uppercase">Currently Reading</h2>
+			<ul class="mt-6 space-y-6">
+				{
+					shelf.map((book) => (
+						<li class="flex items-start gap-5">
+							{book.cover && (
+								<img
+									src={book.cover}
+									alt={`Cover of ${book.title}`}
+									width="96"
+									class="w-24 shrink-0 rounded-sm shadow-md ring-1 ring-charcoal/10"
+									loading="lazy"
+								/>
+							)}
+							<div class="min-w-0 pt-1">
+								<h3 class="font-serif text-xl leading-snug text-charcoal">{book.title}</h3>
+								{book.author && <p class="mt-1 text-sm text-charcoal/50">{book.author}</p>}
+								{book.note && (
+									<p class="mt-2 font-serif text-sm leading-relaxed text-charcoal/55 italic">
+										{book.note}
+									</p>
+								)}
+							</div>
+						</li>
+					))
+				}
+			</ul>
+		</section>
+
+		<!-- Books I read this year -->
+		<section class="mt-14">
+			<div class="flex items-baseline justify-between">
+				<h2 class="text-xs font-semibold tracking-[0.2em] text-forest uppercase">
+					Books I Read in {booksThisYear.year}
+				</h2>
+				<span class="text-xs text-charcoal/40">{readBooks.length} titles</span>
+			</div>
+			<ul class="mt-5">
+				{
+					readBooks.map((book) => (
+						<li class="flex items-baseline justify-between gap-4 border-t border-charcoal/10 py-3 first:border-t-0 first:pt-0">
+							<span class="font-serif text-[1.05rem] leading-snug text-charcoal">{book.title}</span>
+							<span class="shrink-0 text-sm text-charcoal/50">{book.author}</span>
+						</li>
+					))
+				}
+			</ul>
+		</section>
+	</main>
+</Layout>

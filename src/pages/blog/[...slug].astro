@@ -1,0 +1,173 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getCollection, render } from 'astro:content';
+
+export async function getStaticPaths() {
+	const all = await getCollection('blog');
+	// One page per primary (non-English) post; its .en companion rides along.
+	const primary = all.filter((p) => p.data.lang !== 'en');
+	return primary.map((post) => {
+		const en = all.find((p) => p.data.lang === 'en' && p.data.translationOf === post.id);
+		return { params: { slug: post.id }, props: { post, en } };
+	});
+}
+
+const { post, en } = Astro.props;
+const { Content: TrContent } = await render(post);
+const enRender = en ? await render(en) : null;
+const EnContent = enRender?.Content;
+
+const dateFmt = new Intl.DateTimeFormat('en-US', {
+	month: 'long',
+	day: 'numeric',
+	year: 'numeric',
+});
+
+const readingMinutes = (body: string | undefined) =>
+	Math.max(1, Math.round((body ?? '').trim().split(/\s+/).filter(Boolean).length / 200));
+const trMin = readingMinutes(post.body);
+const enMin = readingMinutes(en?.body);
+---
+
+<Layout
+	title={`${post.data.title} — Blog`}
+	description={post.data.title}
+	ogImage={`/og/${post.id}.png`}
+>
+	<main class="mx-auto max-w-2xl px-6 py-12 sm:py-16">
+		<a
+			href="/blog"
+			class="inline-flex items-center gap-1.5 text-sm font-medium text-charcoal/55 transition-colors hover:text-forest"
+		>
+			<span aria-hidden="true">&larr;</span> Back to the blog
+		</a>
+
+		<article id="post" class="mt-8">
+			<header class="border-b border-charcoal/10 pb-8">
+				<div class="flex items-start justify-between gap-4">
+					<div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-charcoal/50">
+						<time datetime={post.data.date.toISOString()}>{dateFmt.format(post.data.date)}</time>
+						<span aria-hidden="true">&middot;</span>
+						<span>
+							<span data-lang="tr">{trMin} min read</span>
+							{en && <span data-lang="en" hidden>{enMin} min read</span>}
+						</span>
+					</div>
+
+					{
+						en && (
+							<div
+								class="lang-toggle inline-flex shrink-0 overflow-hidden rounded-full border border-charcoal/15 text-xs font-semibold"
+								role="group"
+								aria-label="Reading language"
+							>
+								<button type="button" class="lang-seg px-3 py-1" data-lang-btn="tr">
+									TR
+								</button>
+								<button type="button" class="lang-seg px-3 py-1" data-lang-btn="en">
+									EN
+								</button>
+							</div>
+						)
+					}
+				</div>
+
+				<h1 class="mt-3 font-serif text-3xl leading-tight text-charcoal sm:text-4xl">
+					<span data-lang="tr">{post.data.title}</span>
+					{en && <span data-lang="en" hidden>{en.data.title}</span>}
+				</h1>
+
+				<ul class="mt-5 flex flex-wrap gap-2" data-lang="tr">
+					{
+						post.data.tags.map((tag) => (
+							<li class="rounded-full bg-charcoal/[0.06] px-2.5 py-0.5 text-xs font-medium text-charcoal/60">
+								{tag}
+							</li>
+						))
+					}
+				</ul>
+				{
+					en && (
+						<ul class="mt-5 flex flex-wrap gap-2" data-lang="en" hidden>
+							{en.data.tags.map((tag) => (
+								<li class="rounded-full bg-charcoal/[0.06] px-2.5 py-0.5 text-xs font-medium text-charcoal/60">
+									{tag}
+								</li>
+							))}
+						</ul>
+					)
+				}
+			</header>
+
+			<div class="post-body mt-8" data-lang="tr">
+				<TrContent />
+			</div>
+			{
+				EnContent && (
+					<div class="post-body mt-8" data-lang="en" hidden>
+						<EnContent />
+					</div>
+				)
+			}
+		</article>
+
+		<footer class="mt-12 border-t border-charcoal/10 pt-8">
+			<a
+				href="/blog"
+				class="inline-flex items-center gap-1.5 text-sm font-medium text-charcoal/55 transition-colors hover:text-forest"
+			>
+				<span aria-hidden="true">&larr;</span> Back to the blog
+			</a>
+		</footer>
+	</main>
+</Layout>
+
+<style>
+	.lang-seg {
+		color: var(--color-charcoal);
+		opacity: 0.5;
+		transition: background-color 0.15s ease, color 0.15s ease, opacity 0.15s ease;
+	}
+	.lang-seg:hover {
+		opacity: 0.85;
+	}
+	.lang-seg[aria-pressed='true'] {
+		background-color: var(--color-forest);
+		color: var(--color-paper);
+		opacity: 1;
+	}
+</style>
+
+<script>
+	// Swap between Turkish and English versions in place, and remember the choice.
+	const article = document.getElementById('post');
+	if (article) {
+		const buttons = Array.from(
+			article.querySelectorAll<HTMLButtonElement>('[data-lang-btn]')
+		);
+		const hasEn = !!article.querySelector('[data-lang="en"]');
+
+		const setLang = (lang: string) => {
+			const target = lang === 'en' && hasEn ? 'en' : 'tr';
+			article.querySelectorAll<HTMLElement>('[data-lang]').forEach((el) => {
+				el.hidden = el.getAttribute('data-lang') !== target;
+			});
+			buttons.forEach((b) =>
+				b.setAttribute('aria-pressed', String(b.dataset.langBtn === target))
+			);
+			try {
+				localStorage.setItem('post-lang', target);
+			} catch {}
+		};
+
+		let saved = 'tr';
+		try {
+			saved = localStorage.getItem('post-lang') || 'tr';
+		} catch {}
+		setLang(saved);
+
+		buttons.forEach((b) =>
+			b.addEventListener('click', () => setLang(b.dataset.langBtn || 'tr'))
+		);
+	}
+</script>

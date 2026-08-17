@@ -1,0 +1,140 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { getCollection, render } from 'astro:content';
+import { playlists } from '../data/playlists';
+
+const albums = await getCollection('albums');
+const spotlightAlbum = albums.find((album) => album.data.spotlight);
+const otherAlbums = albums
+	.filter((album) => album.id !== spotlightAlbum?.id)
+	.sort((a, b) => b.data.releaseYear - a.data.releaseYear);
+
+const { Content: SpotlightContent } = spotlightAlbum
+	? await render(spotlightAlbum)
+	: { Content: null };
+
+function stripMarkdown(markdown: string) {
+	return markdown
+		.replace(/^#+\s+/gm, '')
+		.replace(/\[(.*?)\]\(.*?\)/g, '$1')
+		.replace(/[*_`>#]/g, '')
+		.replace(/\s+/g, ' ')
+		.trim();
+}
+
+function snippet(markdown: string, length = 140) {
+	const text = stripMarkdown(markdown);
+	return text.length > length ? `${text.slice(0, length).trim()}…` : text;
+}
+
+function ratingDots(rating: number) {
+	return Array.from({ length: 5 }, (_, i) => i < rating);
+}
+---
+
+<Layout
+	title="Wall of Sound — Album Reviews & Playlists"
+	description="Metal album reviews and heavy-rotation playlists, one riff at a time."
+>
+	<main class="mx-auto max-w-5xl px-6 py-16">
+		<header class="mb-16">
+			<h1 class="text-4xl font-bold tracking-tight text-charcoal">Wall of Sound</h1>
+			<p class="mt-2 text-charcoal/60">Metal album reviews and heavy rotation, one riff at a time.</p>
+		</header>
+
+		{
+			spotlightAlbum && (
+				<section class="mb-20 border-b border-charcoal/10 pb-16">
+					<p class="mb-6 text-xs font-semibold tracking-[0.2em] text-rust uppercase">
+						Album of the Month
+					</p>
+					<div class="grid gap-10 md:grid-cols-2">
+						<img
+							src={spotlightAlbum.data.coverImage}
+							alt={`${spotlightAlbum.data.title} cover art`}
+							class="aspect-square w-full rounded-sm object-cover shadow-lg"
+						/>
+						<div class="flex flex-col justify-center">
+							<h2 class="text-3xl font-bold text-charcoal">{spotlightAlbum.data.title}</h2>
+							<p class="mt-1 text-lg text-charcoal/70">{spotlightAlbum.data.artist}</p>
+							<div class="mt-4 flex items-center gap-4">
+								<span class="rounded-full border border-forest/30 px-3 py-1 text-xs font-medium text-forest">
+									{spotlightAlbum.data.genre}
+								</span>
+								<span class="text-sm text-charcoal/60">{spotlightAlbum.data.releaseYear}</span>
+							</div>
+							<div class="mt-4 flex gap-1" aria-label={`Rating: ${spotlightAlbum.data.rating} out of 5`}>
+								{ratingDots(spotlightAlbum.data.rating).map((filled) => (
+									<span class={`h-3 w-3 rounded-full ${filled ? 'bg-rust' : 'bg-charcoal/15'}`} />
+								))}
+							</div>
+							<div class="prose prose-neutral mt-6 max-w-none font-serif text-[1.05rem] leading-relaxed text-charcoal/90">
+								{SpotlightContent && <SpotlightContent />}
+							</div>
+						</div>
+					</div>
+				</section>
+			)
+		}
+
+		<section>
+			<div class="grid gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
+				{otherAlbums.map((album) => (
+					<div class="group block">
+						<img
+							src={album.data.coverImage}
+							alt={`${album.data.title} cover art`}
+							class="aspect-square w-full rounded-sm object-cover transition-shadow duration-200 group-hover:shadow-lg"
+						/>
+						<h3 class="mt-4 text-lg font-bold text-charcoal transition-colors duration-200 group-hover:text-forest">
+							{album.data.title}
+						</h3>
+						<p class="text-sm text-charcoal/60">{album.data.artist}</p>
+						<div class="mt-2 flex items-center gap-3">
+							<span class="rounded-full border border-forest/30 px-2.5 py-0.5 text-[0.7rem] font-medium text-forest">
+								{album.data.genre}
+							</span>
+							<div class="flex gap-0.5" aria-label={`Rating: ${album.data.rating} out of 5`}>
+								{ratingDots(album.data.rating).map((filled) => (
+									<span class={`h-2 w-2 rounded-full ${filled ? 'bg-rust' : 'bg-charcoal/15'}`} />
+								))}
+							</div>
+						</div>
+						<p class="mt-3 font-serif text-sm leading-relaxed text-charcoal/70">
+							{snippet(album.body ?? '')}
+						</p>
+					</div>
+				))}
+			</div>
+		</section>
+
+		<!-- Playlists -->
+		<section class="mt-20 border-t border-charcoal/10 pt-16">
+			<div class="mb-8">
+				<h2 class="text-3xl font-bold tracking-tight text-charcoal">Playlists</h2>
+				<p class="mt-2 text-charcoal/60">Heavy rotation, straight from Spotify.</p>
+			</div>
+
+			<div class="grid gap-8 lg:grid-cols-2">
+				{
+					playlists.map((pl) => (
+						<div>
+							<h3 class="mb-3 font-serif text-lg text-charcoal">{pl.title}</h3>
+							<iframe
+								src={`https://open.spotify.com/embed/playlist/${pl.spotifyId}?utm_source=generator`}
+								title={`${pl.title} — Spotify playlist`}
+								width="100%"
+								height="352"
+								style="border-radius:12px"
+								frameborder="0"
+								loading="lazy"
+								allowfullscreen
+								allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+							/>
+						</div>
+					))
+				}
+			</div>
+		</section>
+	</main>
+</Layout>

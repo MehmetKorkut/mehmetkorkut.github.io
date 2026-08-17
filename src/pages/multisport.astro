@@ -1,0 +1,443 @@
+---
+import Layout from '../layouts/Layout.astro';
+import summary from '../data/activities-summary.json';
+
+const { range, totals } = summary;
+
+const nf = new Intl.NumberFormat('en-US');
+
+const years = [];
+for (let y = range.endYear; y >= range.startYear; y--) years.push(y);
+
+const months = [
+	'January',
+	'February',
+	'March',
+	'April',
+	'May',
+	'June',
+	'July',
+	'August',
+	'September',
+	'October',
+	'November',
+	'December',
+];
+
+const types = ['Run', 'Ride', 'Swim', 'Other'];
+
+const selectClass =
+	'w-full appearance-none rounded-md border border-charcoal/15 bg-paper px-3 py-2 pr-8 text-sm font-medium text-charcoal transition-colors hover:border-forest/40 focus:border-forest focus:outline-none';
+---
+
+<Layout
+	title="Multisport Analytics — Mehmet Korkut"
+	description="A decade of swim, bike, and run training data — 1,399 activities across 22,263 km — visualized and filterable with D3."
+>
+	<main class="mx-auto max-w-5xl px-6 py-12 sm:py-16">
+		<header class="mb-10 border-b border-charcoal/10 pb-8">
+			<p class="text-xs font-semibold tracking-[0.3em] text-rust uppercase">
+				Memo's Multisport Analytics
+			</p>
+			<h1 class="mt-3 font-serif text-4xl leading-tight text-charcoal sm:text-5xl">
+				A Decade of Swim, Bike &amp; Run
+			</h1>
+			<p class="mt-4 max-w-2xl font-serif text-lg leading-relaxed text-charcoal/75">
+				Every logged session from {range.startYear} to {range.endYear}, pulled from Strava and
+				rendered in D3. Filter by year, month, or discipline &mdash; every figure below recomputes
+				live.
+			</p>
+		</header>
+
+		<!-- Filter bar -->
+		<section class="mb-10 rounded-md border border-charcoal/10 bg-charcoal/[0.02] p-4">
+			<div class="grid gap-4 sm:grid-cols-3">
+				<label class="block">
+					<span class="mb-1.5 block text-xs font-semibold tracking-[0.15em] text-charcoal/55 uppercase">Year</span>
+					<div class="relative">
+						<select id="filter-year" class={selectClass}>
+							<option value="all">All years</option>
+							{years.map((y) => <option value={y}>{y}</option>)}
+						</select>
+						<span class="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-charcoal/40">▾</span>
+					</div>
+				</label>
+
+				<label class="block">
+					<span class="mb-1.5 block text-xs font-semibold tracking-[0.15em] text-charcoal/55 uppercase">Month</span>
+					<div class="relative">
+						<select id="filter-month" class={selectClass}>
+							<option value="all">All months</option>
+							{months.map((m, i) => <option value={i + 1}>{m}</option>)}
+						</select>
+						<span class="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-charcoal/40">▾</span>
+					</div>
+				</label>
+
+				<label class="block">
+					<span class="mb-1.5 block text-xs font-semibold tracking-[0.15em] text-charcoal/55 uppercase">Activity Type</span>
+					<div class="relative">
+						<select id="filter-type" class={selectClass}>
+							<option value="all">All types</option>
+							{types.map((t) => <option value={t}>{t === 'Ride' ? 'Ride (Bike)' : t}</option>)}
+						</select>
+						<span class="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-charcoal/40">▾</span>
+					</div>
+				</label>
+			</div>
+			<div class="mt-3 flex items-center justify-between gap-3">
+				<p id="filter-summary" class="text-xs text-charcoal/50"></p>
+				<button
+					id="filter-reset"
+					type="button"
+					class="text-xs font-medium text-forest underline-offset-2 hover:underline"
+				>
+					Reset filters
+				</button>
+			</div>
+		</section>
+
+		<!-- KPI row -->
+		<section
+			id="kpi-row"
+			class="mb-16 grid grid-cols-2 gap-px overflow-hidden rounded-md border border-charcoal/10 bg-charcoal/10 lg:grid-cols-4"
+		>
+		</section>
+
+		<!-- Discipline split -->
+		<section class="mb-16">
+			<h2 class="mb-6 text-xs font-semibold tracking-[0.25em] text-forest uppercase">
+				The Three Disciplines
+			</h2>
+			<div id="disc-split" class="grid gap-6 sm:grid-cols-3"></div>
+		</section>
+
+		<!-- Chart: annual volume -->
+		<section class="mb-16">
+			<div class="mb-2 flex flex-wrap items-end justify-between gap-2">
+				<h2 class="text-xs font-semibold tracking-[0.25em] text-forest uppercase">
+					Annual Training Volume
+				</h2>
+				<div class="flex flex-wrap gap-4 text-xs text-charcoal/60">
+					<span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-full bg-rust"></span>Run</span>
+					<span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-full bg-forest"></span>Ride</span>
+					<span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-full bg-charcoal"></span>Swim</span>
+					<span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-full" style="background:#cfc9bd"></span>Other</span>
+				</div>
+			</div>
+			<p class="mb-4 text-sm text-charcoal/55">Hours per year, stacked by discipline.</p>
+			<div id="chart-volume" class="w-full"></div>
+		</section>
+
+		<!-- Chart: consistency heatmap -->
+		<section class="mb-16">
+			<h2 class="mb-2 text-xs font-semibold tracking-[0.25em] text-forest uppercase">
+				Training Consistency
+			</h2>
+			<p class="mb-4 text-sm text-charcoal/55">
+				Monthly moving time &mdash; darker means more hours.
+			</p>
+			<div id="chart-heatmap" class="w-full"></div>
+		</section>
+
+		<!-- Chart: performance -->
+		<section>
+			<h2 class="mb-2 text-xs font-semibold tracking-[0.25em] text-forest uppercase">
+				Performance Trends
+			</h2>
+			<p class="mb-4 text-sm text-charcoal/55">
+				Average running pace and cycling speed, year over year.
+			</p>
+			<div class="grid gap-8 sm:grid-cols-2">
+				<div>
+					<p class="mb-2 text-sm font-medium text-charcoal">Run pace <span class="text-charcoal/45">(min/km · lower is faster)</span></p>
+					<div id="chart-pace" class="w-full"></div>
+				</div>
+				<div>
+					<p class="mb-2 text-sm font-medium text-charcoal">Ride speed <span class="text-charcoal/45">(km/h)</span></p>
+					<div id="chart-speed" class="w-full"></div>
+				</div>
+			</div>
+		</section>
+
+		<p class="mt-12 border-t border-charcoal/10 pt-6 text-xs text-charcoal/40">
+			Source: personal Strava export ({nf.format(totals.activities)} activities). Last updated {summary.generatedAt}.
+		</p>
+	</main>
+</Layout>
+
+<script>
+	import * as d3 from 'd3';
+	import summary from '../data/activities-summary.json';
+
+	type Activity = { y: number; m: number; t: string; km: number; s: number; e: number };
+	const activities = summary.activities as Activity[];
+	const range = summary.range;
+
+	const css = getComputedStyle(document.documentElement);
+	const cv = (name: string, fallback: string) => css.getPropertyValue(name).trim() || fallback;
+	const COLORS: Record<string, string> = {
+		Run: cv('--color-rust', '#a8471f'),
+		Ride: cv('--color-forest', '#2f4a3d'),
+		Swim: cv('--color-charcoal', '#2b2b2b'),
+		Other: '#cfc9bd',
+	};
+	const CHARCOAL = cv('--color-charcoal', '#2b2b2b');
+	const PAPER = cv('--color-paper', '#f7f5f0');
+	const FOREST = cv('--color-forest', '#2f4a3d');
+	const AXIS = 'rgba(43,43,43,0.55)';
+	const DISCIPLINES = ['Run', 'Ride', 'Swim', 'Other'];
+	const nf = new Intl.NumberFormat('en-US');
+
+	// Tooltip
+	const tip = d3
+		.select('body')
+		.append('div')
+		.style('position', 'fixed')
+		.style('pointer-events', 'none')
+		.style('opacity', '0')
+		.style('z-index', '100')
+		.style('background', CHARCOAL)
+		.style('color', PAPER)
+		.style('padding', '8px 10px')
+		.style('border-radius', '6px')
+		.style('font', "12px 'Inter', sans-serif")
+		.style('line-height', '1.5')
+		.style('box-shadow', '0 4px 16px rgba(0,0,0,0.18)');
+	const showTip = (html: string, event: MouseEvent) => {
+		tip.html(html).style('opacity', '1');
+		tip
+			.style('left', `${Math.min(event.clientX + 14, window.innerWidth - 180)}px`)
+			.style('top', `${event.clientY + 14}px`);
+	};
+	const hideTip = () => tip.style('opacity', '0');
+
+	// Filter state
+	const state = { year: 'all', month: 'all', type: 'all' };
+	const yearSel = document.getElementById('filter-year') as HTMLSelectElement;
+	const monthSel = document.getElementById('filter-month') as HTMLSelectElement;
+	const typeSel = document.getElementById('filter-type') as HTMLSelectElement;
+
+	function getFiltered(): Activity[] {
+		return activities.filter(
+			(a) =>
+				(state.year === 'all' || a.y === +state.year) &&
+				(state.month === 'all' || a.m === +state.month) &&
+				(state.type === 'all' || a.t === state.type)
+		);
+	}
+
+	function emptyState(elId: string, msg: string) {
+		const el = document.getElementById(elId)!;
+		el.innerHTML = `<div class="flex h-32 items-center justify-center rounded-md border border-charcoal/5 text-sm text-charcoal/40">${msg}</div>`;
+	}
+
+	// ---- Renderers ----
+	function renderKpis(f: Activity[]) {
+		const distKm = f.reduce((s, a) => s + a.km, 0);
+		const hours = f.reduce((s, a) => s + a.s, 0) / 3600;
+		const elev = f.reduce((s, a) => s + a.e, 0);
+		const kpis = [
+			{ value: nf.format(Math.round(distKm)), unit: 'km', label: 'Distance covered' },
+			{ value: nf.format(Math.round(hours)), unit: 'hrs', label: 'Moving time' },
+			{ value: nf.format(f.length), unit: '', label: 'Activities' },
+			{ value: nf.format(Math.round(elev)), unit: 'm', label: 'Vertical climbed' },
+		];
+		document.getElementById('kpi-row')!.innerHTML = kpis
+			.map(
+				(k) => `<div class="bg-paper p-5">
+					<p class="font-serif text-3xl text-charcoal">${k.value}${k.unit ? `<span class="ml-1 text-lg text-charcoal/50">${k.unit}</span>` : ''}</p>
+					<p class="mt-1 text-xs font-medium tracking-wide text-charcoal/55 uppercase">${k.label}</p>
+				</div>`
+			)
+			.join('');
+	}
+
+	function renderSplit(f: Activity[]) {
+		const meta: Record<string, { color: string; blurb: string }> = {
+			Run: { color: COLORS.Run, blurb: 'Road & trail' },
+			Ride: { color: COLORS.Ride, blurb: 'Road cycling' },
+			Swim: { color: COLORS.Swim, blurb: 'Pool & open water' },
+		};
+		const agg: Record<string, { km: number; hours: number; count: number }> = {};
+		for (const d of DISCIPLINES) agg[d] = { km: 0, hours: 0, count: 0 };
+		for (const a of f) {
+			agg[a.t].km += a.km;
+			agg[a.t].hours += a.s / 3600;
+			agg[a.t].count++;
+		}
+		const totalHours = DISCIPLINES.reduce((s, d) => s + agg[d].hours, 0) || 1;
+		document.getElementById('disc-split')!.innerHTML = (['Run', 'Ride', 'Swim'] as const)
+			.map((d) => {
+				const share = Math.round((agg[d].hours / totalHours) * 100);
+				return `<div class="rounded-md border border-charcoal/10 p-6">
+					<div class="flex items-center gap-2">
+						<span class="h-3 w-3 rounded-full" style="background:${meta[d].color}"></span>
+						<h3 class="font-serif text-xl text-charcoal">${d}</h3>
+					</div>
+					<p class="mt-1 text-sm text-charcoal/50">${meta[d].blurb}</p>
+					<dl class="mt-4 space-y-1.5 text-sm">
+						<div class="flex justify-between"><dt class="text-charcoal/55">Distance</dt><dd class="font-medium text-charcoal">${nf.format(Math.round(agg[d].km))} km</dd></div>
+						<div class="flex justify-between"><dt class="text-charcoal/55">Time</dt><dd class="font-medium text-charcoal">${nf.format(Math.round(agg[d].hours))} hrs</dd></div>
+						<div class="flex justify-between"><dt class="text-charcoal/55">Sessions</dt><dd class="font-medium text-charcoal">${nf.format(agg[d].count)}</dd></div>
+					</dl>
+					<div class="mt-4">
+						<div class="h-1.5 w-full overflow-hidden rounded-full bg-charcoal/10">
+							<div class="h-full rounded-full" style="width:${share}%;background:${meta[d].color}"></div>
+						</div>
+						<p class="mt-1.5 text-xs text-charcoal/45">${share}% of training time</p>
+					</div>
+				</div>`;
+			})
+			.join('');
+	}
+
+	function renderVolume(f: Activity[]) {
+		const el = document.getElementById('chart-volume')!;
+		el.innerHTML = '';
+		const yearsPresent = [...new Set(f.map((a) => a.y))].sort((a, b) => a - b);
+		if (!yearsPresent.length) return emptyState('chart-volume', 'No activities for this selection.');
+		const rows = yearsPresent.map((year) => {
+			const row: any = { year, Run: 0, Ride: 0, Swim: 0, Other: 0 };
+			for (const a of f) if (a.y === year) row[a.t] += a.s / 3600;
+			return row;
+		});
+		const width = el.clientWidth;
+		const height = 320;
+		const margin = { top: 10, right: 12, bottom: 28, left: 40 };
+		const iw = width - margin.left - margin.right;
+		const ih = height - margin.top - margin.bottom;
+		const keys = ['Run', 'Ride', 'Swim', 'Other'];
+		const stack = d3.stack().keys(keys)(rows as any);
+		const x = d3.scaleBand().domain(rows.map((d) => String(d.year))).range([0, iw]).padding(0.22);
+		const yMax = d3.max(rows, (d: any) => keys.reduce((s, k) => s + d[k], 0)) || 1;
+		const y = d3.scaleLinear().domain([0, yMax]).nice().range([ih, 0]);
+		const svg = d3.select(el).append('svg').attr('width', '100%').attr('height', height).attr('viewBox', `0 0 ${width} ${height}`);
+		const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
+		g.append('g').attr('color', 'rgba(43,43,43,0.08)').call(d3.axisLeft(y).ticks(5).tickSize(-iw).tickFormat(() => '') as any).call((s) => s.select('.domain').remove());
+		g.selectAll('g.layer').data(stack).join('g').attr('class', 'layer').attr('fill', (d: any) => COLORS[d.key])
+			.selectAll('rect').data((d: any) => d.map((seg: any) => ({ ...seg, key: d.key }))).join('rect')
+			.attr('x', (d: any) => x(String(d.data.year))!).attr('y', (d: any) => y(d[1]))
+			.attr('height', (d: any) => Math.max(0, y(d[0]) - y(d[1]))).attr('width', x.bandwidth()).attr('rx', 1)
+			.on('mousemove', (event: MouseEvent, d: any) => {
+				const r = d.data;
+				showTip(`<strong>${r.year}</strong><br>Run ${r.Run.toFixed(1)}h · Ride ${r.Ride.toFixed(1)}h<br>Swim ${r.Swim.toFixed(1)}h · Other ${r.Other.toFixed(1)}h`, event);
+			}).on('mouseleave', hideTip);
+		g.append('g').attr('transform', `translate(0,${ih})`).attr('color', AXIS).call(d3.axisBottom(x).tickSize(0).tickPadding(8) as any).call((s) => s.select('.domain').remove()).selectAll('text').attr('font-size', '10px');
+		g.append('g').attr('color', AXIS).call(d3.axisLeft(y).ticks(5).tickSize(0).tickPadding(6).tickFormat((d) => `${d}h`) as any).call((s) => s.select('.domain').remove()).selectAll('text').attr('font-size', '10px');
+	}
+
+	function renderHeatmap(f: Activity[]) {
+		const el = document.getElementById('chart-heatmap')!;
+		el.innerHTML = '';
+		const yearsPresent = [...new Set(f.map((a) => a.y))].sort((a, b) => a - b);
+		if (!yearsPresent.length) return emptyState('chart-heatmap', 'No activities for this selection.');
+		const width = el.clientWidth;
+		const margin = { top: 20, right: 12, bottom: 8, left: 44 };
+		const months = d3.range(1, 13);
+		const monthLabels = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
+		const cell = Math.min(34, (width - margin.left - margin.right) / 12);
+		const gap = 3;
+		const gridW = 12 * cell;
+		const gridH = yearsPresent.length * cell;
+		const height = gridH + margin.top + margin.bottom;
+		const lookup = new Map<string, number>();
+		for (const a of f) {
+			const k = `${a.y}-${a.m}`;
+			lookup.set(k, (lookup.get(k) ?? 0) + a.s / 3600);
+		}
+		const maxH = d3.max([...lookup.values()]) || 1;
+		const color = d3.scaleLinear<string>().domain([0, maxH]).range(['#e9e6de', FOREST]);
+		const svg = d3.select(el).append('svg').attr('width', '100%').attr('height', height).attr('viewBox', `0 0 ${margin.left + gridW + margin.right} ${height}`);
+		const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
+		g.selectAll('text.m').data(months).join('text').attr('class', 'm').attr('x', (d) => (d - 1) * cell + cell / 2).attr('y', -8).attr('text-anchor', 'middle').attr('font-size', '10px').attr('fill', AXIS).text((d) => monthLabels[d - 1]);
+		g.selectAll('text.y').data(yearsPresent).join('text').attr('class', 'y').attr('x', -8).attr('y', (d, i) => i * cell + cell / 2).attr('dominant-baseline', 'central').attr('text-anchor', 'end').attr('font-size', '10px').attr('fill', AXIS).text((d) => `'${String(d).slice(2)}`);
+		yearsPresent.forEach((yr, ri) => {
+			months.forEach((mo) => {
+				const h = lookup.get(`${yr}-${mo}`) ?? 0;
+				g.append('rect').attr('x', (mo - 1) * cell).attr('y', ri * cell).attr('width', cell - gap).attr('height', cell - gap).attr('rx', 2)
+					.attr('fill', h > 0 ? color(h) : 'rgba(43,43,43,0.04)')
+					.on('mousemove', (event: MouseEvent) => showTip(`<strong>${yr}-${String(mo).padStart(2, '0')}</strong><br>${h.toFixed(1)} hours`, event))
+					.on('mouseleave', hideTip);
+			});
+		});
+	}
+
+	function renderLine(elId: string, series: { year: number; val: number }[], color: string, invert: boolean, unit: string) {
+		const el = document.getElementById(elId)!;
+		el.innerHTML = '';
+		if (!series.length) return emptyState(elId, 'No data for this selection.');
+		const width = el.clientWidth;
+		const height = 200;
+		const margin = { top: 10, right: 14, bottom: 24, left: 36 };
+		const iw = width - margin.left - margin.right;
+		const ih = height - margin.top - margin.bottom;
+		const x = d3.scalePoint<number>().domain(series.map((d) => d.year)).range([0, iw]).padding(0.5);
+		const ext = d3.extent(series, (d) => d.val) as [number, number];
+		const pad = (ext[1] - ext[0]) * 0.15 || 1;
+		const y = d3.scaleLinear().domain([ext[0] - pad, ext[1] + pad]).range(invert ? [0, ih] : [ih, 0]);
+		const svg = d3.select(el).append('svg').attr('width', '100%').attr('height', height).attr('viewBox', `0 0 ${width} ${height}`);
+		const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
+		g.append('g').attr('color', 'rgba(43,43,43,0.08)').call(d3.axisLeft(y).ticks(4).tickSize(-iw).tickFormat(() => '') as any).call((s) => s.select('.domain').remove());
+		if (series.length > 1) {
+			const line = d3.line<any>().x((d) => x(d.year)!).y((d) => y(d.val)).curve(d3.curveMonotoneX);
+			g.append('path').datum(series).attr('fill', 'none').attr('stroke', color).attr('stroke-width', 2).attr('d', line);
+		}
+		g.selectAll('circle').data(series).join('circle').attr('cx', (d) => x(d.year)!).attr('cy', (d) => y(d.val)).attr('r', 3.5).attr('fill', color).attr('stroke', PAPER).attr('stroke-width', 1.5)
+			.on('mousemove', (event: MouseEvent, d: any) => showTip(`<strong>${d.year}</strong><br>${d.val} ${unit}`, event)).on('mouseleave', hideTip);
+		g.append('g').attr('transform', `translate(0,${ih})`).attr('color', AXIS).call(d3.axisBottom(x).tickSize(0).tickPadding(8).tickFormat((d) => `'${String(d).slice(2)}`) as any).call((s) => s.select('.domain').remove()).selectAll('text').attr('font-size', '9px');
+		g.append('g').attr('color', AXIS).call(d3.axisLeft(y).ticks(4).tickSize(0).tickPadding(6) as any).call((s) => s.select('.domain').remove()).selectAll('text').attr('font-size', '9px');
+	}
+
+	function paceSeries(f: Activity[], type: string): { year: number; val: number }[] {
+		const byY = new Map<number, { dist: number; sec: number }>();
+		for (const a of f) {
+			if (a.t !== type || a.km <= 0) continue;
+			if (!byY.has(a.y)) byY.set(a.y, { dist: 0, sec: 0 });
+			const o = byY.get(a.y)!;
+			o.dist += a.km;
+			o.sec += a.s;
+		}
+		return [...byY.entries()].sort((a, b) => a[0] - b[0]).map(([year, o]) => ({
+			year,
+			val: type === 'Run' ? Math.round((o.sec / 60 / o.dist) * 100) / 100 : Math.round((o.dist / (o.sec / 3600)) * 10) / 10,
+		}));
+	}
+
+	function renderFilterSummary(f: Activity[]) {
+		const parts: string[] = [];
+		if (state.year !== 'all') parts.push(state.year);
+		if (state.month !== 'all') parts.push(monthSel.options[monthSel.selectedIndex].text);
+		if (state.type !== 'all') parts.push(state.type);
+		const scope = parts.length ? parts.join(' · ') : 'All activities';
+		document.getElementById('filter-summary')!.textContent = `Showing ${nf.format(f.length)} activities — ${scope}`;
+	}
+
+	function renderAll() {
+		const f = getFiltered();
+		renderFilterSummary(f);
+		renderKpis(f);
+		renderSplit(f);
+		renderVolume(f);
+		renderHeatmap(f);
+		renderLine('chart-pace', paceSeries(f, 'Run'), COLORS.Run, true, 'min/km');
+		renderLine('chart-speed', paceSeries(f, 'Ride'), COLORS.Ride, false, 'km/h');
+	}
+
+	yearSel.addEventListener('change', () => { state.year = yearSel.value; renderAll(); });
+	monthSel.addEventListener('change', () => { state.month = monthSel.value; renderAll(); });
+	typeSel.addEventListener('change', () => { state.type = typeSel.value; renderAll(); });
+	document.getElementById('filter-reset')!.addEventListener('click', () => {
+		state.year = state.month = state.type = 'all';
+		yearSel.value = monthSel.value = typeSel.value = 'all';
+		renderAll();
+	});
+
+	let t: number;
+	window.addEventListener('resize', () => {
+		clearTimeout(t);
+		t = window.setTimeout(renderAll, 150);
+	});
+
+	renderAll();
+</script>

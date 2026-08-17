@@ -1,0 +1,129 @@
+---
+const links = [
+	{ href: '/', label: 'Home' },
+	{ href: '/blog', label: 'Blog' },
+	{ href: '/books', label: 'Books' },
+	{ href: '/projects', label: 'Projects' },
+	{ href: '/wall-of-sound', label: 'Wall of Sound' },
+	{ href: '/resume', label: 'Résumé' },
+];
+
+const current = Astro.url.pathname.replace(/\/$/, '') || '/';
+const isActive = (href: string) => (href === '/' ? current === '/' : current.startsWith(href));
+---
+
+<header class="sticky top-0 z-50 border-b border-charcoal/10 bg-paper/85 backdrop-blur-sm">
+	<nav class="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
+		<a href="/" class="group flex items-baseline gap-2">
+			<span class="font-serif text-lg font-semibold tracking-tight text-charcoal">Mehmet Korkut</span>
+			<span class="hidden text-xs tracking-[0.25em] text-rust uppercase sm:inline">Logbook</span>
+		</a>
+
+		<div class="flex items-center gap-1 sm:gap-2">
+			<!-- Desktop links -->
+		<ul class="hidden items-center gap-1 sm:flex lg:gap-2">
+			{
+				links.map((link) => (
+					<li>
+						<a
+							href={link.href}
+							aria-current={isActive(link.href) ? 'page' : undefined}
+							class:list={[
+								'rounded-sm px-2.5 py-1.5 text-sm font-medium transition-colors lg:px-3',
+								isActive(link.href) ? 'text-forest' : 'text-charcoal/60 hover:text-charcoal',
+							]}
+						>
+							{link.label}
+						</a>
+					</li>
+				))
+			}
+		</ul>
+
+		<!-- Theme toggle -->
+		<button
+			type="button"
+			id="theme-toggle"
+			class="theme-toggle flex h-9 w-9 items-center justify-center rounded-sm text-charcoal/60 transition-colors hover:bg-charcoal/[0.06] hover:text-charcoal"
+			aria-label="Toggle dark mode"
+			title="Toggle dark mode"
+		>
+			<svg
+				class="icon-moon h-[1.15rem] w-[1.15rem]"
+				viewBox="0 0 20 20"
+				fill="none"
+				stroke="currentColor"
+				stroke-width="1.5"
+				stroke-linecap="round"
+				stroke-linejoin="round"
+				aria-hidden="true"
+			>
+				<path d="M16.5 11.2A6.2 6.2 0 0 1 8.8 3.5a6.5 6.5 0 1 0 7.7 7.7Z"></path>
+			</svg>
+			<svg
+				class="icon-sun h-[1.15rem] w-[1.15rem]"
+				viewBox="0 0 20 20"
+				fill="none"
+				stroke="currentColor"
+				stroke-width="1.5"
+				stroke-linecap="round"
+				stroke-linejoin="round"
+				aria-hidden="true"
+			>
+				<circle cx="10" cy="10" r="3.4"></circle>
+				<path d="M10 2v1.6M10 16.4V18M18 10h-1.6M3.6 10H2M15.7 4.3l-1.1 1.1M5.4 14.6l-1.1 1.1M15.7 15.7l-1.1-1.1M5.4 5.4 4.3 4.3"></path>
+			</svg>
+		</button>
+
+		<!-- Mobile disclosure menu (no JS) -->
+		<details class="group relative sm:hidden">
+			<summary
+				class="flex cursor-pointer list-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm font-medium text-charcoal/70 [&::-webkit-details-marker]:hidden"
+				aria-label="Toggle navigation menu"
+			>
+				<span class="group-open:hidden">Menu</span>
+				<span class="hidden group-open:inline">Close</span>
+				<svg class="h-4 w-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+					<line x1="3" y1="6" x2="17" y2="6" class="group-open:hidden"></line>
+					<line x1="3" y1="10" x2="17" y2="10" class="group-open:hidden"></line>
+					<line x1="3" y1="14" x2="17" y2="14" class="group-open:hidden"></line>
+					<line x1="5" y1="5" x2="15" y2="15" class="hidden group-open:block"></line>
+					<line x1="15" y1="5" x2="5" y2="15" class="hidden group-open:block"></line>
+				</svg>
+			</summary>
+			<ul
+				class="absolute right-0 mt-3 w-52 rounded-md border border-charcoal/10 bg-paper p-2 shadow-lg"
+			>
+				{
+					links.map((link) => (
+						<li>
+							<a
+								href={link.href}
+								aria-current={isActive(link.href) ? 'page' : undefined}
+								class:list={[
+									'block rounded-sm px-3 py-2 text-sm font-medium transition-colors',
+									isActive(link.href)
+										? 'bg-forest/10 text-forest'
+										: 'text-charcoal/70 hover:bg-charcoal/[0.04]',
+								]}
+							>
+								{link.label}
+							</a>
+						</li>
+					))
+				}
+			</ul>
+		</details>
+		</div>
+	</nav>
+</header>
+
+<script>
+	const toggle = document.getElementById('theme-toggle');
+	toggle?.addEventListener('click', () => {
+		const root = document.documentElement;
+		const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
+		root.dataset.theme = next;
+		localStorage.setItem('theme', next);
+	});
+</script>

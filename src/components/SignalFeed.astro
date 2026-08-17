@@ -1,0 +1,87 @@
+---
+// A compact "one glance = the whole person" stream for the homepage.
+// Each item is a live pull from a different corner of the site.
+export type FeedItem = {
+	kind: 'writing' | 'reading' | 'listening' | 'fretboard' | 'training';
+	label: string; // channel name, e.g. "Writing"
+	title: string; // the headline
+	meta: string; // supporting line
+	href: string;
+	accent: 'forest' | 'rust';
+};
+
+interface Props {
+	items: FeedItem[];
+}
+
+const { items } = Astro.props;
+
+// Minimal 18px line icons, keyed by channel.
+const icons: Record<FeedItem['kind'], string> = {
+	writing: '<path d="M4 13.5V16h2.5L14 8.5 11.5 6 4 13.5Z"/><path d="M11.5 6 14 8.5"/>',
+	reading:
+		'<path d="M10 5.5C8.5 4.5 6 4.2 3.8 4.6v9C6 13.2 8.5 13.5 10 14.5c1.5-1 4-1.3 6.2-.9v-9C14 4.2 11.5 4.5 10 5.5Z"/><path d="M10 5.5v9"/>',
+	listening: '<circle cx="10" cy="10" r="6.2"/><circle cx="10" cy="10" r="1.4"/>',
+	fretboard: '<path d="M7 15.5V6l8-2v9.5"/><circle cx="5.4" cy="15.5" r="1.6"/><circle cx="13.4" cy="13.5" r="1.6"/>',
+	training: '<path d="M2.5 10h3l2-4 3 8 2-4h4.5"/>',
+};
+---
+
+<section class="mx-auto max-w-5xl px-6 pt-10 sm:pt-14">
+	<div class="mb-4 flex items-baseline justify-between">
+		<p class="text-xs font-semibold tracking-[0.3em] text-charcoal/45 uppercase">Latest Signals</p>
+		<p class="hidden font-serif text-sm text-charcoal/45 italic sm:block">
+			Signal, sound, and the spaces between.
+		</p>
+	</div>
+
+	<ul
+		class="-mx-6 flex snap-x snap-mandatory gap-3 overflow-x-auto px-6 pb-2 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 lg:grid-cols-4"
+	>
+		{
+			items.map((item) => (
+				<li class="min-w-[15rem] shrink-0 snap-start sm:min-w-0">
+					<a
+						href={item.href}
+						class:list={[
+							'group flex h-full flex-col rounded-md border bg-paper p-4 transition-colors',
+							item.accent === 'forest'
+								? 'border-charcoal/10 hover:border-forest/45'
+								: 'border-charcoal/10 hover:border-rust/45',
+						]}
+					>
+						<div class="flex items-center justify-between">
+							<span
+								class:list={[
+									'flex items-center gap-1.5 text-[0.65rem] font-semibold tracking-[0.15em] uppercase',
+									item.accent === 'forest' ? 'text-forest' : 'text-rust',
+								]}
+							>
+								<svg
+									class="h-4 w-4"
+									viewBox="0 0 20 20"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="1.4"
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									aria-hidden="true"
+									set:html={icons[item.kind]}
+								/>
+								{item.label}
+							</span>
+							<span
+								class="text-charcoal/25 transition group-hover:translate-x-0.5 group-hover:text-charcoal/50"
+								aria-hidden="true"
+							>
+								&rarr;
+							</span>
+						</div>
+						<h3 class="mt-3 font-serif text-[0.95rem] leading-snug text-charcoal">{item.title}</h3>
+						<p class="mt-auto pt-2 text-xs text-charcoal/55">{item.meta}</p>
+					</a>
+				</li>
+			))
+		}
+	</ul>
+</section>
