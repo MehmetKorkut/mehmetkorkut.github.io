@@ -8,6 +8,8 @@ For a long time I told myself Spotify was making my life easier. One app, every 
 
 This is the story of why I left, what I built to get out, and how I did the whole thing with Claude Code sitting next to me.
 
+*This project is featured on my [Projects](/projects) page, with the code and a short breakdown.*
+
 ## The part I don't usually admit
 
 Spotify turned music into a feed.
@@ -145,5 +147,3 @@ You don't need to be a developer to want your music out of a system that's optim
 The catch worth knowing up front: moving thousands of songs at once looks like abuse to the platforms, so patience beats brute force. Do the safe work first, don't rush the part that gets you throttled, and keep everything resumable so a setback costs you minutes, not the whole project.
 
 Mostly, though, I'd say this: if an app has quietly changed how you do something you love, that's reason enough to change the app. I'm glad I did.
-
-*The code is on GitHub if you want to try it yourself: [MehmetKorkut/spotify-to-metrolist](https://github.com/MehmetKorkut/spotify-to-metrolist).*

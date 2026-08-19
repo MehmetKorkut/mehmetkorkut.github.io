@@ -24,6 +24,9 @@ const projects = defineCollection({
 		techStack: z.array(z.string()),
 		date: z.date(),
 		featured: z.boolean(),
+		// Optional links shown on the project card.
+		repo: z.string().optional(),
+		post: z.string().optional(), // path to a related blog post, e.g. /blog/<slug>
 	}),
 });
 
