@@ -9,6 +9,13 @@ const { title, description, ogImage } = Astro.props;
 const canonical = new URL(Astro.url.pathname, Astro.site).href;
 // Per-post OG image if provided, otherwise a site-wide default card.
 const ogImageUrl = new URL(ogImage ?? '/og-default.png', Astro.site).href;
+
+// ── Analytics (GoatCounter) ───────────────────────────────────────────
+// Your goatcounter.com site code — the subdomain of your dashboard, e.g.
+// "mehmetkorkut" → https://mehmetkorkut.goatcounter.com. Sign up (free),
+// pick an available code, and set it here. Tracking only runs in the
+// production build, so local `astro dev` visits are never counted.
+const GOATCOUNTER_CODE = 'mehmetkorkut';
 ---
 
 <html lang="en">
@@ -49,6 +56,18 @@ const ogImageUrl = new URL(ogImage ?? '/og-default.png', Astro.site).href;
 		<meta name="twitter:image" content={ogImageUrl} />
 
 		<title>{title}</title>
+
+		{/* Cookieless analytics — production only, so dev visits aren't counted. */}
+		{
+			import.meta.env.PROD && GOATCOUNTER_CODE && (
+				<script
+					is:inline
+					defer
+					data-goatcounter={`https://${GOATCOUNTER_CODE}.goatcounter.com/count`}
+					src="https://gc.zgo.at/count.js"
+				/>
+			)
+		}
 	</head>
 	<body class="flex min-h-screen flex-col text-charcoal">
 		<Nav />

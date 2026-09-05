@@ -5,6 +5,7 @@ export type ReadBook = {
 };
 
 export const library: ReadBook[] = [
+	{ author: 'Anna Lowenhaupt Tsing', title: 'Dunyanin Sonundaki Mantar' },
 	{ author: 'Douglas Adams', title: 'Otostopcunun Galaksi Rehberi' },
 	{ author: 'Tim Hardford', title: 'Veri Dedektifi' },
 	{ author: 'Jason Schreler', title: 'Kan, Ter ve Pikseller' },

@@ -8,7 +8,7 @@ export type Book = {
 
 export const shelf: Book[] = [
 	{
-		title: 'Dunyanin Sonundaki Mantar',
-		cover: '/books/dunyanin-sonundaki-mantar.jpg',
+		title: "Man's Search for Meaning",
+		author: 'Viktor Frankl',
 	},
 ];
