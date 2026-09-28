@@ -4,12 +4,8 @@ import { getCollection } from 'astro:content';
 import summary from '../data/activities-summary.json';
 import SignalFeed from '../components/SignalFeed.astro';
 import type { FeedItem } from '../components/SignalFeed.astro';
-import { shelf } from '../data/shelf';
 
-const albums = await getCollection('albums');
 const projects = await getCollection('projects');
-
-const spotlight = albums.find((a) => a.data.spotlight) ?? albums[0];
 const featured = projects.find((p) => p.data.featured) ?? projects[0];
 
 // ---- Signal feed: one live pull from each corner of the site ----
@@ -18,11 +14,6 @@ const monthFmt = new Intl.DateTimeFormat('en-US', { month: 'short', year: 'numer
 const latestPost = (await getCollection('blog'))
 	.filter((p) => p.data.lang !== 'en')
 	.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())[0];
-
-const currentBook = shelf[0];
-
-const topAlbum =
-	[...albums].sort((a, b) => b.data.rating - a.data.rating || b.data.releaseYear - a.data.releaseYear)[0];
 
 // Most-recent logged activity (the array is ordered newest-first).
 const lastActivity = summary.activities[0];
@@ -46,22 +37,6 @@ const feedItems: FeedItem[] = [
 		href: `/blog/${latestPost.id}`,
 		accent: 'forest' as const,
 	},
-	currentBook && {
-		kind: 'reading' as const,
-		label: 'Reading',
-		title: currentBook.title,
-		meta: currentBook.author ?? 'On the desk now',
-		href: '/books',
-		accent: 'rust' as const,
-	},
-	topAlbum && {
-		kind: 'listening' as const,
-		label: 'Listening',
-		title: topAlbum.data.title,
-		meta: `${topAlbum.data.artist} · ${'●'.repeat(topAlbum.data.rating)}`,
-		href: '/wall-of-sound',
-		accent: 'forest' as const,
-	},
 	lastActivity && {
 		kind: 'training' as const,
 		label: 'Training',
@@ -81,8 +56,6 @@ const split = [
 	{ label: 'Swim', color: 'var(--color-charcoal)', pct: (disc.Swim.hours / totalHours) * 100 },
 	{ label: 'Other', color: '#cfc9bd', pct: (disc.Other.hours / totalHours) * 100 },
 ];
-
-const ratingDots = (rating: number) => Array.from({ length: 5 }, (_, i) => i < rating);
 ---
 
 <Layout
@@ -97,7 +70,6 @@ const ratingDots = (rating: number) => Array.from({ length: 5 }, (_, i) => i < r
 			<section
 				class="flex flex-col justify-between rounded-md border border-charcoal/10 bg-paper p-7 sm:col-span-2 lg:row-span-2"
 			>
-				<p class="text-xs font-semibold tracking-[0.3em] text-rust uppercase">Logbook</p>
 				<div class="my-6">
 					<h1 class="font-serif text-4xl leading-[1.1] text-charcoal sm:text-5xl">
 						Signal, Sound, and the Spaces Between
@@ -174,45 +146,10 @@ const ratingDots = (rating: number) => Array.from({ length: 5 }, (_, i) => i < r
 				</p>
 			</a>
 
-			<!-- C · Heavy Rotation (Wall of Sound) — softened forest accent card -->
-			<a
-				href="/wall-of-sound"
-				class="group flex flex-col justify-between rounded-md bg-forest/85 p-6 text-paper transition-transform hover:-translate-y-0.5"
-			>
-				<p class="text-xs font-semibold tracking-[0.2em] text-paper/70 uppercase">Heavy Rotation</p>
-				{
-					spotlight && (
-						<div class="mt-3">
-							<img
-								src={spotlight.data.coverImage}
-								alt={`${spotlight.data.title} cover art`}
-								class="aspect-square w-full rounded-sm object-cover ring-1 ring-paper/20"
-								loading="lazy"
-							/>
-							<h2 class="mt-3 font-serif text-lg leading-tight">{spotlight.data.title}</h2>
-							<p class="text-sm text-paper/70">{spotlight.data.artist}</p>
-							<div
-								class="mt-2 flex gap-1"
-								aria-label={`Rating: ${spotlight.data.rating} out of 5`}
-							>
-								{ratingDots(spotlight.data.rating).map((filled) => (
-									<span
-										class:list={[
-											'h-2 w-2 rounded-full',
-											filled ? 'bg-rust' : 'bg-paper/25',
-										]}
-									/>
-								))}
-							</div>
-						</div>
-					)
-				}
-			</a>
-
-			<!-- D · The Blog -->
+			<!-- C · The Blog -->
 			<a
 				href="/blog"
-				class="group flex flex-col overflow-hidden rounded-md border border-charcoal/10 bg-paper p-6 transition-colors hover:border-forest/40"
+				class="group flex flex-col overflow-hidden rounded-md border border-charcoal/10 bg-paper p-6 transition-colors hover:border-forest/40 sm:col-span-2"
 			>
 				<div class="flex items-start justify-between">
 					<p class="text-xs font-semibold tracking-[0.2em] text-forest uppercase">Writing</p>

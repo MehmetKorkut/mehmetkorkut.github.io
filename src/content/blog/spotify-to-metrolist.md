@@ -39,7 +39,7 @@ Metrolist doesn't have an "import from Spotify" button, and it isn't supposed to
 So the migration is really three moves:
 
 <figure style="margin:1.75rem 0;">
-<svg viewBox="0 0 360 520" role="img" aria-label="Migration pipeline: a Python script reads my 56 Spotify playlists via the Spotify API, searches and best-matches each track on YouTube Music, creates the matched playlists in my YouTube Music account, and they appear automatically in Metrolist once it signs into the same Google account." style="display:block;width:100%;max-width:340px;margin:0 auto;font-family:'Lora',Georgia,serif;" xmlns="http://www.w3.org/2000/svg">
+<svg viewBox="0 0 360 520" role="img" aria-label="Migration pipeline: a Python script reads my 56 Spotify playlists via the Spotify API, searches and best-matches each track on YouTube Music, creates the matched playlists in my YouTube Music account, and they appear automatically in Metrolist once it signs into the same Google account." style="display:block;width:100%;max-width:340px;margin:0 auto;font-family:'JetBrains Mono',ui-monospace,monospace;" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <marker id="pl-arrow" markerWidth="9" markerHeight="9" refX="6" refY="4" orient="auto">
       <path d="M1,1 L6,4 L1,7" fill="none" stroke="var(--color-charcoal)" stroke-opacity="0.4" stroke-width="1.3"/>
