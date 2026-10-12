@@ -7,6 +7,10 @@ date: 2026-08-19
 featured: false
 repo: "https://github.com/MehmetKorkut/spotify-to-metrolist"
 post: "/blog/spotify-to-metrolist"
+figure:
+  value: 0.99
+  label: "99%+"
+  caption: "of ~4,400 tracks matched across 56 playlists"
 ---
 
 A command-line tool for leaving Spotify without losing years of curated playlists. It pulls every playlist and track from the Spotify API, searches YouTube Music for the best match per song, and recreates the playlists in a YouTube Music account — which the Metrolist app then picks up automatically.

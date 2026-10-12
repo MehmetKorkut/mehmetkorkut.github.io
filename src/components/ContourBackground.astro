@@ -1,0 +1,298 @@
+---
+/*
+ * Ambient topographic background: hairline contour lines traced over a slowly
+ * morphing noise field, like a terrain map that breathes. Monochrome — it
+ * draws in the current ink colour at low opacity, so it follows light/dark
+ * automatically. Every fifth line is a slightly stronger "index" contour, as
+ * on a real map. Pauses when the tab is hidden; renders a single still frame
+ * for prefers-reduced-motion.
+ *
+ * The map is the same on every page: the clock is carried across navigations
+ * in sessionStorage, and the canvas has its own view-transition name, so
+ * moving between pages reads as one continuous terrain.
+ *
+ * variant="full"    — the whole viewport, quieter behind the text (home, 404)
+ * variant="margins" — only in the side margins, fainter (reading pages)
+ */
+interface Props {
+	variant?: 'full' | 'margins';
+}
+const { variant = 'margins' } = Astro.props;
+---
+
+<canvas id="contour-bg" class:list={['contour-bg', `contour-bg--${variant}`]} aria-hidden="true"
+></canvas>
+
+<style>
+	.contour-bg {
+		position: fixed;
+		inset: 0;
+		z-index: -1;
+		width: 100%;
+		height: 100%;
+		pointer-events: none;
+		view-transition-name: contours;
+	}
+	/* Quieter in the middle, where the text column sits. */
+	.contour-bg--full {
+		-webkit-mask-image: radial-gradient(ellipse 55% 60% at 50% 45%, rgb(0 0 0 / 0.35), #000 100%);
+		mask-image: radial-gradient(ellipse 55% 60% at 50% 45%, rgb(0 0 0 / 0.35), #000 100%);
+	}
+	/* Only the outer margins, so long reads stay clean. */
+	.contour-bg--margins {
+		opacity: 0.75;
+		-webkit-mask-image: linear-gradient(to right, #000, transparent 24%, transparent 76%, #000);
+		mask-image: linear-gradient(to right, #000, transparent 24%, transparent 76%, #000);
+	}
+</style>
+
+<script>
+	const canvas = document.getElementById('contour-bg') as HTMLCanvasElement | null;
+	const ctx = canvas?.getContext('2d');
+
+	if (canvas && ctx) {
+		const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
+		const root = document.documentElement;
+
+		// ── Improved Perlin noise (3D), with a fixed seed so the map is stable ──
+		const perm = new Uint8Array(512);
+		{
+			const p = Array.from({ length: 256 }, (_, i) => i);
+			let seed = 1337;
+			const rand = () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646;
+			for (let i = 255; i > 0; i--) {
+				const j = Math.floor(rand() * (i + 1));
+				[p[i], p[j]] = [p[j], p[i]];
+			}
+			for (let i = 0; i < 512; i++) perm[i] = p[i & 255];
+		}
+		const fade = (t: number) => t * t * t * (t * (t * 6 - 15) + 10);
+		const lerp = (a: number, b: number, t: number) => a + t * (b - a);
+		const grad = (hash: number, x: number, y: number, z: number) => {
+			const h = hash & 15;
+			const u = h < 8 ? x : y;
+			const v = h < 4 ? y : h === 12 || h === 14 ? x : z;
+			return (h & 1 ? -u : u) + (h & 2 ? -v : v);
+		};
+		const noise = (x: number, y: number, z: number) => {
+			const X = Math.floor(x) & 255;
+			const Y = Math.floor(y) & 255;
+			const Z = Math.floor(z) & 255;
+			x -= Math.floor(x);
+			y -= Math.floor(y);
+			z -= Math.floor(z);
+			const u = fade(x);
+			const v = fade(y);
+			const w = fade(z);
+			const A = perm[X] + Y;
+			const AA = perm[A] + Z;
+			const AB = perm[A + 1] + Z;
+			const B = perm[X + 1] + Y;
+			const BA = perm[B] + Z;
+			const BB = perm[B + 1] + Z;
+			return lerp(
+				lerp(
+					lerp(grad(perm[AA], x, y, z), grad(perm[BA], x - 1, y, z), u),
+					lerp(grad(perm[AB], x, y - 1, z), grad(perm[BB], x - 1, y - 1, z), u),
+					v
+				),
+				lerp(
+					lerp(grad(perm[AA + 1], x, y, z - 1), grad(perm[BA + 1], x - 1, y, z - 1), u),
+					lerp(grad(perm[AB + 1], x, y - 1, z - 1), grad(perm[BB + 1], x - 1, y - 1, z - 1), u),
+					v
+				),
+				w
+			);
+		};
+
+		// ── Field + contour settings ──
+		const CELL = 14; // grid resolution in CSS px
+		const SCALE = 0.0028; // terrain feature size (smaller = broader hills)
+		const LEVEL_STEP = 0.07; // spacing between contour heights
+		const LEVEL_MIN = -0.7;
+		const LEVEL_MAX = 0.7;
+		const ALPHA = 0.08; // regular contour opacity
+		const INDEX_ALPHA = 0.17; // every fifth line, like a map's index contours
+
+		let ink = '';
+		const readInk = () => {
+			ink = getComputedStyle(root).getPropertyValue('--color-charcoal').trim() || '#131313';
+		};
+		readInk();
+
+		let width = 0;
+		let height = 0;
+		let cols = 0;
+		let rows = 0;
+		let field = new Float32Array(0);
+
+		const resize = () => {
+			const dpr = Math.min(window.devicePixelRatio || 1, 2);
+			width = window.innerWidth;
+			height = window.innerHeight;
+			canvas.width = Math.round(width * dpr);
+			canvas.height = Math.round(height * dpr);
+			ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+			cols = Math.ceil(width / CELL) + 1;
+			rows = Math.ceil(height / CELL) + 1;
+			field = new Float32Array(cols * rows);
+		};
+
+		const sample = (t: number) => {
+			const z = t * 0.035;
+			const drift = t * 0.012; // the whole map slides very gently
+			for (let j = 0; j < rows; j++) {
+				for (let i = 0; i < cols; i++) {
+					const x = i * CELL * SCALE + drift;
+					const y = j * CELL * SCALE;
+					field[j * cols + i] = noise(x, y, z) + 0.35 * noise(x * 2.1, y * 2.1, z * 1.6);
+				}
+			}
+		};
+
+		// Marching squares: one stroked path per contour level.
+		const draw = (t: number) => {
+			sample(t);
+			ctx.clearRect(0, 0, width, height);
+			ctx.strokeStyle = ink;
+			ctx.lineWidth = 1;
+
+			// Two paths (regular + index contours) keep this to two stroke calls.
+			const regular = new Path2D();
+			const index = new Path2D();
+			let n = 0;
+			for (let level = LEVEL_MIN; level <= LEVEL_MAX; level += LEVEL_STEP, n++) {
+				const p = n % 5 === 0 ? index : regular;
+				for (let j = 0; j < rows - 1; j++) {
+					for (let i = 0; i < cols - 1; i++) {
+						const tl = field[j * cols + i];
+						const tr = field[j * cols + i + 1];
+						const br = field[(j + 1) * cols + i + 1];
+						const bl = field[(j + 1) * cols + i];
+						const idx =
+							(tl > level ? 8 : 0) | (tr > level ? 4 : 0) | (br > level ? 2 : 0) | (bl > level ? 1 : 0);
+						if (idx === 0 || idx === 15) continue;
+
+						const x0 = i * CELL;
+						const y0 = j * CELL;
+						const x1 = x0 + CELL;
+						const y1 = y0 + CELL;
+						// Interpolated crossing points on each edge of the cell
+						// (an unused edge may divide by zero; it is never drawn).
+						const topX = x0 + (CELL * (level - tl)) / (tr - tl);
+						const rightY = y0 + (CELL * (level - tr)) / (br - tr);
+						const bottomX = x0 + (CELL * (level - bl)) / (br - bl);
+						const leftY = y0 + (CELL * (level - tl)) / (bl - tl);
+
+						switch (idx) {
+							case 1:
+							case 14:
+								p.moveTo(x0, leftY);
+								p.lineTo(bottomX, y1);
+								break;
+							case 2:
+							case 13:
+								p.moveTo(bottomX, y1);
+								p.lineTo(x1, rightY);
+								break;
+							case 3:
+							case 12:
+								p.moveTo(x0, leftY);
+								p.lineTo(x1, rightY);
+								break;
+							case 4:
+							case 11:
+								p.moveTo(topX, y0);
+								p.lineTo(x1, rightY);
+								break;
+							case 5:
+								p.moveTo(x0, leftY);
+								p.lineTo(topX, y0);
+								p.moveTo(bottomX, y1);
+								p.lineTo(x1, rightY);
+								break;
+							case 6:
+							case 9:
+								p.moveTo(topX, y0);
+								p.lineTo(bottomX, y1);
+								break;
+							case 7:
+							case 8:
+								p.moveTo(x0, leftY);
+								p.lineTo(topX, y0);
+								break;
+							case 10:
+								p.moveTo(topX, y0);
+								p.lineTo(x1, rightY);
+								p.moveTo(x0, leftY);
+								p.lineTo(bottomX, y1);
+								break;
+						}
+					}
+				}
+			}
+			ctx.globalAlpha = ALPHA;
+			ctx.stroke(regular);
+			ctx.globalAlpha = INDEX_ALPHA;
+			ctx.stroke(index);
+			ctx.globalAlpha = 1;
+		};
+
+		// The terrain moves under half a pixel per frame, so ~10fps looks
+		// smooth here and keeps the main thread (and batteries) free.
+		let frame = 0;
+		let last = 0;
+		let elapsed = 0;
+
+		// Pick the clock up where the previous page left it, so the terrain is
+		// continuous across navigations.
+		const CLOCK_KEY = 'contour-clock';
+		try {
+			const saved = JSON.parse(sessionStorage.getItem(CLOCK_KEY) || 'null');
+			if (saved && typeof saved.t === 'number' && typeof saved.at === 'number') {
+				elapsed = saved.t + Math.max(0, Math.min(Date.now() - saved.at, 60_000)) / 1000;
+			}
+		} catch {}
+		const saveClock = () => {
+			try {
+				sessionStorage.setItem(CLOCK_KEY, JSON.stringify({ t: elapsed, at: Date.now() }));
+			} catch {}
+		};
+		window.addEventListener('pageswap', saveClock); // fires first on view-transition navigations
+		window.addEventListener('pagehide', saveClock);
+		const loop = (now: number) => {
+			frame = requestAnimationFrame(loop);
+			if (now - last < 100) return;
+			elapsed += Math.min(now - last, 250) / 1000;
+			last = now;
+			draw(elapsed);
+		};
+
+		const start = () => {
+			cancelAnimationFrame(frame);
+			if (reduceMotion.matches || document.hidden) {
+				draw(elapsed);
+				return;
+			}
+			last = performance.now();
+			frame = requestAnimationFrame(loop);
+		};
+
+		resize();
+		draw(elapsed);
+		start();
+
+		window.addEventListener('resize', () => {
+			resize();
+			draw(elapsed);
+		});
+		document.addEventListener('visibilitychange', start);
+		reduceMotion.addEventListener('change', start);
+
+		// Re-read the ink colour when the theme toggle flips data-theme.
+		new MutationObserver(() => {
+			readInk();
+			draw(elapsed);
+		}).observe(root, { attributes: true, attributeFilter: ['data-theme'] });
+	}
+</script>

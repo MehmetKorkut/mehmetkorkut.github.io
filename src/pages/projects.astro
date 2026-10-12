@@ -1,6 +1,8 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import { getCollection } from 'astro:content';
+import MiniChart from '../components/MiniChart.astro';
+import activitySummary from '../data/activities-summary.json';
 
 const projects = (await getCollection('projects')).sort(
 	(a, b) => b.data.date.valueOf() - a.data.date.valueOf()
@@ -10,6 +12,44 @@ const featured = projects.find((p) => p.data.featured) ?? projects[0];
 const rest = projects.filter((p) => p.id !== featured?.id);
 
 const dateFmt = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' });
+
+// Small real-data charts for the cards. The triathlon project gets its
+// training hours per year straight from the Strava summary; other projects
+// can declare a single headline figure in frontmatter.
+const { range } = activitySummary;
+const hoursByYear: number[] = [];
+for (let y = range.startYear; y <= range.endYear; y++) {
+	const secs = activitySummary.activities
+		.filter((a: { y: number }) => a.y === y)
+		.reduce((s: number, a: { s: number }) => s + a.s, 0);
+	hoursByYear.push(Math.round(secs / 3600));
+}
+// The data export is dated; if it ends mid-year, the last point is partial.
+const lastYearPartial = new Date(activitySummary.generatedAt).getFullYear() === range.endYear;
+
+type Project = (typeof projects)[number];
+const chartFor = (p: Project) => {
+	if (p.id === 'triathlon-analytics') {
+		return {
+			kind: 'line' as const,
+			values: hoursByYear,
+			startLabel: String(range.startYear),
+			endLabel: lastYearPartial ? `${range.endYear}*` : String(range.endYear),
+			partialLast: lastYearPartial,
+			caption: `training hours per year${lastYearPartial ? ` · *${range.endYear} so far` : ''}`,
+		};
+	}
+	if (p.data.figure) {
+		return {
+			kind: 'meter' as const,
+			value: p.data.figure.value,
+			valueLabel: p.data.figure.label,
+			caption: p.data.figure.caption,
+		};
+	}
+	return null;
+};
+const featuredChart = featured ? chartFor(featured) : null;
 ---
 
 <Layout
@@ -44,31 +84,22 @@ const dateFmt = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric
 							{featured.data.description}
 						</p>
 
-						<div class="mt-6 grid gap-6 sm:grid-cols-2">
-							<div>
-								<p class="mb-2 text-xs font-semibold tracking-[0.15em] text-forest uppercase">
-									Methodology
-								</p>
-								<ul class="flex flex-wrap gap-2">
-									{featured.data.methodology.map((m) => (
-										<li class="rounded-full border border-forest/30 px-2.5 py-0.5 text-xs font-medium text-forest">
-											{m}
-										</li>
-									))}
-								</ul>
-							</div>
-							<div>
-								<p class="mb-2 text-xs font-semibold tracking-[0.15em] text-rust uppercase">
-									Tech Stack
-								</p>
-								<ul class="flex flex-wrap gap-2">
-									{featured.data.techStack.map((t) => (
-										<li class="rounded-full bg-charcoal/[0.06] px-2.5 py-0.5 text-xs font-medium text-charcoal/70">
-											{t}
-										</li>
-									))}
-								</ul>
-							</div>
+						<div class="mt-7 grid gap-6 sm:grid-cols-[1fr_auto] sm:items-end">
+							<dl class="space-y-3 font-mono text-xs">
+								<div>
+									<dt class="text-charcoal/45">methodology</dt>
+									<dd class="mt-1 leading-relaxed text-charcoal/80">
+										{featured.data.methodology.join(' · ')}
+									</dd>
+								</div>
+								<div>
+									<dt class="text-charcoal/45">stack</dt>
+									<dd class="mt-1 leading-relaxed text-charcoal/80">
+										{featured.data.techStack.join(' · ')}
+									</dd>
+								</div>
+							</dl>
+							{featuredChart && <MiniChart {...featuredChart} />}
 						</div>
 
 						<div class="mt-7 flex flex-wrap items-center gap-4">
@@ -112,13 +143,13 @@ const dateFmt = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric
 								<p class="mt-2 flex-1 font-serif text-[0.98rem] leading-relaxed text-charcoal/75">
 									{project.data.description}
 								</p>
-								<ul class="mt-4 flex flex-wrap gap-2">
-									{project.data.techStack.slice(0, 4).map((t) => (
-										<li class="rounded-full bg-charcoal/[0.06] px-2.5 py-0.5 text-xs font-medium text-charcoal/70">
-											{t}
-										</li>
-									))}
-								</ul>
+								<p class="mt-4 font-mono text-xs leading-relaxed text-charcoal/60">
+									{project.data.techStack.join(' · ')}
+								</p>
+								{(() => {
+									const chart = chartFor(project);
+									return chart && <div class="mt-4"><MiniChart {...chart} /></div>;
+								})()}
 								{(project.data.repo || project.data.post) && (
 									<div class="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-charcoal/10 pt-4 text-sm font-semibold">
 										{project.data.repo && (

@@ -1,10 +1,56 @@
 ---
+import { getCollection } from 'astro:content';
+
+// A vim/tmux-style status line: current path as the "mode" chip, a little
+// site state in the middle, build info and links on the right.
+const posts = (await getCollection('blog')).filter((p) => p.data.lang !== 'en').length;
+const projects = (await getCollection('projects')).length;
+
+const path = Astro.url.pathname.replace(/\/$/, '');
+const cwd = `~${path}`;
+
 const year = new Date().getFullYear();
+const built = new Date().toISOString().slice(0, 10);
+
+const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
+
+const links = [
+	{ label: 'github', href: 'https://github.com/MehmetKorkut' },
+	{ label: 'linkedin', href: 'https://linkedin.com/in/mehmet-korkut' },
+	{ label: 'email', href: 'mailto:korkuttmehmet@outlook.com' },
+];
 ---
 
-<footer class="mt-24 border-t border-charcoal/10">
-	<div class="mx-auto flex max-w-5xl flex-col items-center justify-between gap-4 px-6 py-10 text-sm text-charcoal/50 sm:flex-row">
-		<p class="font-serif italic">Signal, sound, and the spaces between.</p>
-		<p>&copy; {year} Mehmet Korkut &middot; Built with Astro</p>
+<footer class="mt-24 border-t border-charcoal/10 bg-paper/85 font-mono text-xs backdrop-blur-sm">
+	<div
+		class="mx-auto flex max-w-5xl flex-wrap items-center gap-x-4 gap-y-2 px-6 py-3 text-charcoal/55"
+	>
+		<span
+			class="max-w-[60vw] truncate bg-charcoal px-2 py-0.5 font-semibold text-paper sm:max-w-xs"
+			title={cwd}
+		>
+			{cwd}
+		</span>
+		<span>{plural(posts, 'post')} &middot; {plural(projects, 'project')}</span>
+
+		<div class="flex flex-wrap items-center gap-x-4 gap-y-2 sm:ml-auto">
+			<ul class="flex items-center gap-3">
+				{
+					links.map((l) => (
+						<li>
+							<a
+								href={l.href}
+								{...(l.href.startsWith('http') ? { target: '_blank', rel: 'noopener' } : {})}
+								class="underline-offset-4 transition-colors hover:text-charcoal hover:underline"
+							>
+								{l.label}
+							</a>
+						</li>
+					))
+				}
+			</ul>
+			<span class="hidden text-charcoal/40 md:inline">utf-8 &middot; astro &middot; built {built}</span>
+			<span class="text-charcoal/40">&copy; {year} mehmet korkut</span>
+		</div>
 	</div>
 </footer>

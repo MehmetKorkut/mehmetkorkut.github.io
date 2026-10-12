@@ -1,0 +1,101 @@
+---
+/*
+ * A tiny monochrome chart for project cards, drawn in the current ink colour.
+ *   kind="line"  — a sparkline over a series (e.g. hours per year); with
+ *                  partialLast, the final segment is dashed (period not over yet)
+ *   kind="meter" — a single 0–1 ratio as a thin bar (e.g. match rate)
+ * Always pair it with a caption: the chart is a glance, the caption is the fact.
+ */
+type Props =
+	| {
+			kind: 'line';
+			values: number[];
+			caption: string;
+			startLabel?: string;
+			endLabel?: string;
+			partialLast?: boolean;
+	  }
+	| { kind: 'meter'; value: number; caption: string; valueLabel?: string };
+
+const props = Astro.props;
+
+const W = 160;
+const H = 36;
+const PAD = 3;
+
+let line = '';
+let area = '';
+let tail = '';
+let end: [number, number] | null = null;
+
+if (props.kind === 'line' && props.values.length > 1) {
+	const vals = props.values;
+	const max = Math.max(...vals);
+	const min = Math.min(0, ...vals);
+	const x = (i: number) => PAD + (i * (W - PAD * 2)) / (vals.length - 1);
+	const y = (v: number) => H - PAD - ((v - min) / (max - min || 1)) * (H - PAD * 2);
+	const pts = vals.map((v, i) => [x(i), y(v)] as [number, number]);
+	const solid = props.partialLast ? pts.slice(0, -1) : pts;
+	const fmt = (p: [number, number]) => `${p[0].toFixed(1)},${p[1].toFixed(1)}`;
+	line = solid.map(fmt).join(' ');
+	area = `${fmt([pts[0][0], H - PAD])} ${pts.map(fmt).join(' ')} ${fmt([pts[pts.length - 1][0], H - PAD])}`;
+	if (props.partialLast) tail = `${fmt(pts[pts.length - 2])} ${fmt(pts[pts.length - 1])}`;
+	end = pts[pts.length - 1];
+}
+---
+
+<figure class="mini-chart text-charcoal">
+	{
+		props.kind === 'line' ? (
+			<>
+				<svg
+					viewBox={`0 0 ${W} ${H}`}
+					class="h-9 w-40"
+					role="img"
+					aria-label={props.caption}
+					preserveAspectRatio="none"
+				>
+					<polygon points={area} fill="currentColor" fill-opacity="0.07" />
+					<polyline
+						points={line}
+						fill="none"
+						stroke="currentColor"
+						stroke-width="1.25"
+						stroke-linejoin="round"
+						vector-effect="non-scaling-stroke"
+					/>
+					{tail && (
+						<polyline
+							points={tail}
+							fill="none"
+							stroke="currentColor"
+							stroke-opacity="0.6"
+							stroke-width="1.25"
+							stroke-dasharray="2 2"
+							vector-effect="non-scaling-stroke"
+						/>
+					)}
+					{end && <circle cx={end[0]} cy={end[1]} r="2" fill="currentColor" />}
+				</svg>
+				{(props.startLabel || props.endLabel) && (
+					<div class="flex w-40 justify-between font-mono text-[10px] text-charcoal/40" aria-hidden="true">
+						<span>{props.startLabel}</span>
+						<span>{props.endLabel}</span>
+					</div>
+				)}
+			</>
+		) : (
+			<div class="flex w-40 items-center gap-2">
+				<div class="h-1 flex-1 bg-charcoal/10" role="img" aria-label={props.caption}>
+					<div class="h-full bg-charcoal" style={`width:${Math.round(props.value * 1000) / 10}%`} />
+				</div>
+				<span class="font-mono text-[10px] text-charcoal/60 tabular-nums" aria-hidden="true">
+					{props.valueLabel ?? `${Math.round(props.value * 100)}%`}
+				</span>
+			</div>
+		)
+	}
+	<figcaption class="mt-1.5 font-mono text-[11px] leading-snug text-charcoal/50">
+		{props.caption}
+	</figcaption>
+</figure>

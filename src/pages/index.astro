@@ -2,11 +2,13 @@
 import Layout from '../layouts/Layout.astro';
 import { getCollection } from 'astro:content';
 
-const latestPost = (await getCollection('blog'))
+const recentPosts = (await getCollection('blog'))
 	.filter((p) => p.data.lang !== 'en')
-	.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())[0];
+	.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
+	.slice(0, 5);
 
-const dateFmt = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+// Log-style ISO dates (YYYY-MM-DD), like a file listing.
+const isoDate = (d: Date) => d.toISOString().slice(0, 10);
 
 const sections = [
 	{
@@ -28,6 +30,7 @@ const tags = ['Data Science', 'Triathlon', 'Heavy Metal', 'Books'];
 <Layout
 	title="Mehmet Korkut"
 	description="Just a human being who likes data, books, heavy metal and triathlon"
+	contours="full"
 >
 	<main class="mx-auto max-w-2xl px-6 py-20 sm:py-28">
 		<!-- Hero -->
@@ -77,23 +80,44 @@ const tags = ['Data Science', 'Triathlon', 'Heavy Metal', 'Books'];
 			</ul>
 		</nav>
 
-		<!-- Latest -->
+		<!-- Recent posts, as a log -->
 		{
-			latestPost && (
-				<section class="mt-16">
-					<p class="font-mono text-xs font-semibold tracking-[0.25em] text-charcoal/40 uppercase">
-						Latest
+			recentPosts.length > 0 && (
+				<section class="mt-16" aria-labelledby="recent-label">
+					<p id="recent-label" class="font-mono text-xs text-charcoal/45">
+						<span aria-hidden="true">$ </span>ls -t ~/blog
 					</p>
-					<a href={`/blog/${latestPost.id}`} class="group mt-3 flex items-baseline justify-between gap-5">
-						<span class="font-serif text-lg leading-snug text-charcoal decoration-gold decoration-2 underline-offset-4 group-hover:underline">
-							{latestPost.data.title}
-						</span>
-						<time
-							datetime={latestPost.data.date.toISOString()}
-							class="shrink-0 font-mono text-xs text-charcoal/45"
-						>
-							{dateFmt.format(latestPost.data.date)}
-						</time>
+					<ol class="mt-4 font-mono text-sm">
+						{recentPosts.map((post) => (
+							<li>
+								<a
+									href={`/blog/${post.id}`}
+									class="group flex items-baseline gap-4 py-2 sm:gap-6"
+								>
+									<time
+										datetime={post.data.date.toISOString()}
+										class="shrink-0 text-xs text-charcoal/45 tabular-nums"
+									>
+										{isoDate(post.data.date)}
+									</time>
+									<span class="min-w-0 flex-1 leading-snug text-charcoal">
+										<span class="log-link">{post.data.title}</span>
+									</span>
+									<span
+										class="shrink-0 text-charcoal/30 transition-all group-hover:translate-x-1 group-hover:text-charcoal"
+										aria-hidden="true"
+									>
+										-&gt;
+									</span>
+								</a>
+							</li>
+						))}
+					</ol>
+					<a
+						href="/blog"
+						class="mt-4 inline-block font-mono text-xs text-charcoal/50 underline-offset-4 transition-colors hover:text-charcoal hover:underline"
+					>
+						all posts -&gt;
 					</a>
 				</section>
 			)

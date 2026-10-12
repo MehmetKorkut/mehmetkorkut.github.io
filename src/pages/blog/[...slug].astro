@@ -34,6 +34,9 @@ const enMin = readingMinutes(en?.body);
 	description={post.data.title}
 	ogImage={`/og/${post.id}.png`}
 >
+	<!-- Reading progress: a hairline under the sticky nav that fills as you read. -->
+	<div id="read-progress" class="read-progress" aria-hidden="true"></div>
+
 	<main class="mx-auto max-w-2xl px-6 py-12 sm:py-16">
 		<a
 			href="/blog"
@@ -45,12 +48,12 @@ const enMin = readingMinutes(en?.body);
 		<article id="post" class="mt-8">
 			<header class="border-b border-charcoal/10 pb-8">
 				<div class="flex items-start justify-between gap-4">
-					<div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-charcoal/50">
+					<div class="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-xs text-charcoal/50">
 						<time datetime={post.data.date.toISOString()}>{dateFmt.format(post.data.date)}</time>
 						<span aria-hidden="true">&middot;</span>
 						<span>
-							<span data-lang="tr">{trMin} min read</span>
-							{en && <span data-lang="en" hidden>{enMin} min read</span>}
+							<span data-lang="tr">~{trMin} min read</span>
+							{en && <span data-lang="en" hidden>~{enMin} min read</span>}
 						</span>
 					</div>
 
@@ -136,6 +139,19 @@ const enMin = readingMinutes(en?.body);
 		color: var(--color-paper);
 		opacity: 1;
 	}
+
+	.read-progress {
+		position: fixed;
+		left: 0;
+		right: 0;
+		top: var(--nav-bottom, 0px);
+		z-index: 60;
+		height: 2px;
+		background-color: var(--color-charcoal);
+		transform: scaleX(0);
+		transform-origin: 0 50%;
+		pointer-events: none;
+	}
 </style>
 
 <script>
@@ -169,5 +185,36 @@ const enMin = readingMinutes(en?.body);
 		buttons.forEach((b) =>
 			b.addEventListener('click', () => setLang(b.dataset.langBtn || 'tr'))
 		);
+	}
+
+	// Reading progress: 0 when the article top meets the nav, 1 when its end
+	// reaches the bottom of the viewport.
+	const bar = document.getElementById('read-progress');
+	const header = document.querySelector('body > header');
+	if (bar && article) {
+		let queued = false;
+		const update = () => {
+			queued = false;
+			const navBottom = header ? header.getBoundingClientRect().bottom : 0;
+			bar.style.setProperty('--nav-bottom', `${Math.max(0, navBottom - 1)}px`);
+			const rect = article.getBoundingClientRect();
+			const total = rect.height - (window.innerHeight - navBottom);
+			const read = navBottom - rect.top;
+			const p = total > 0 ? Math.min(1, Math.max(0, read / total)) : 1;
+			bar.style.transform = `scaleX(${p})`;
+		};
+		const queue = () => {
+			if (!queued) {
+				queued = true;
+				requestAnimationFrame(update);
+			}
+		};
+		window.addEventListener('scroll', queue, { passive: true });
+		window.addEventListener('resize', queue);
+		// Swapping TR/EN changes the article length.
+		article
+			.querySelectorAll('[data-lang-btn]')
+			.forEach((b) => b.addEventListener('click', queue));
+		update();
 	}
 </script>

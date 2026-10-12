@@ -30,6 +30,38 @@
 
 :root {
 	--page-bg: var(--color-paper);
+
+	/* Chart-only palette: the site itself stays monochrome, but the multisport
+	   dashboard needs its four disciplines told apart. Muted, and lifted for
+	   dark mode below. */
+	--chart-run: #b5563f;
+	--chart-ride: #4a7196;
+	--chart-swim: #3f8a7e;
+	--chart-other: #a19d96;
+}
+
+:root[data-theme='dark'] {
+	--chart-run: #d9826b;
+	--chart-ride: #7fa5c9;
+	--chart-swim: #6cb8aa;
+	--chart-other: #77736d;
+}
+
+/*
+ * Cross-document view transitions: page changes crossfade, and the contour
+ * canvas (view-transition-name: contours) carries over as its own layer, so
+ * the terrain reads as continuous between pages.
+ */
+@view-transition {
+	navigation: auto;
+}
+::view-transition-group(contours) {
+	animation-duration: 0.45s;
+}
+@media (prefers-reduced-motion: reduce) {
+	@view-transition {
+		navigation: none;
+	}
 }
 
 body {
@@ -82,6 +114,26 @@ p.font-serif {
 @media (prefers-reduced-motion: reduce) {
 	.logo-caret {
 		animation: none;
+	}
+}
+
+/* Log-style links: an underline that draws in from the left on hover/focus.
+   Applied to an inline span so it follows the text across line breaks. */
+.log-link {
+	background-image: linear-gradient(currentColor, currentColor);
+	background-repeat: no-repeat;
+	background-position: 0 100%;
+	background-size: 0% 1px;
+	padding-bottom: 1px;
+	transition: background-size 0.25s ease;
+}
+.group:hover .log-link,
+.group:focus-visible .log-link {
+	background-size: 100% 1px;
+}
+@media (prefers-reduced-motion: reduce) {
+	.log-link {
+		transition: none;
 	}
 }
 

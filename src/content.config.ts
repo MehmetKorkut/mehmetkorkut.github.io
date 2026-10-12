@@ -27,6 +27,15 @@ const projects = defineCollection({
 		// Optional links shown on the project card.
 		repo: z.string().optional(),
 		post: z.string().optional(), // path to a related blog post, e.g. /blog/<slug>
+		// Optional single headline figure, drawn as a small meter on the card.
+		// Use real numbers only, e.g. { value: 0.99, label: "99%+", caption: "tracks matched" }.
+		figure: z
+			.object({
+				value: z.number().min(0).max(1),
+				label: z.string().optional(),
+				caption: z.string(),
+			})
+			.optional(),
 	}),
 });
 

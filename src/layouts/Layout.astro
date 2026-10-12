@@ -2,8 +2,10 @@
 import '../styles/global.css';
 import Nav from '../components/Nav.astro';
 import Footer from '../components/Footer.astro';
+import ContourBackground from '../components/ContourBackground.astro';
 
-const { title, description, ogImage } = Astro.props;
+// contours: 'full' behind the whole page (home, 404), 'margins' elsewhere.
+const { title, description, ogImage, contours = 'margins' } = Astro.props;
 
 // Absolute URLs for canonical + social meta. Astro.site comes from astro.config.
 const canonical = new URL(Astro.url.pathname, Astro.site).href;
@@ -70,6 +72,7 @@ const GOATCOUNTER_CODE = 'mehmetkorkut';
 		}
 	</head>
 	<body class="flex min-h-screen flex-col text-charcoal">
+		<ContourBackground variant={contours} />
 		<Nav />
 		<div class="flex-1">
 			<slot />

@@ -3,59 +3,53 @@ import Layout from '../layouts/Layout.astro';
 ---
 
 <Layout
-	title="404 — This shelf is empty"
-	description="The page you're looking for isn't on the shelf."
+	title="404 — Off the map"
+	description="The page you're looking for isn't on the map."
+	contours="full"
 >
-	<main class="mx-auto flex max-w-2xl flex-col items-center px-6 py-20 text-center sm:py-28">
-		<p class="font-serif text-7xl leading-none text-rust sm:text-8xl">404</p>
-
-		<!-- An almost-empty shelf: one lonely book, and a conspicuous gap. -->
-		<svg
-			viewBox="0 0 320 96"
-			class="mt-8 w-full max-w-sm"
-			role="img"
-			aria-label="An empty bookshelf with a single leaning book"
-		>
-			<!-- books, clustered left, then a long gap -->
-			<g>
-				<rect x="20" y="30" width="16" height="58" rx="1.5" fill="var(--color-forest)"></rect>
-				<rect x="38" y="22" width="12" height="66" rx="1.5" fill="var(--color-rust)"></rect>
-				<rect x="52" y="36" width="19" height="52" rx="1.5" fill="var(--color-charcoal)" fill-opacity="0.55"></rect>
-				<!-- one leaning survivor -->
-				<rect
-					x="74"
-					y="30"
-					width="14"
-					height="58"
-					rx="1.5"
-					fill="var(--color-forest)"
-					fill-opacity="0.55"
-					transform="rotate(9 81 88)"></rect>
-				<!-- …and a whole lot of nothing -->
-			</g>
-			<!-- shelf plank -->
-			<rect x="0" y="88" width="320" height="4" rx="2" fill="var(--color-charcoal)" fill-opacity="0.25"></rect>
-		</svg>
-
-		<h1 class="mt-10 font-serif text-3xl text-charcoal sm:text-4xl">This shelf is empty</h1>
-		<p class="mt-4 max-w-md font-serif text-lg leading-relaxed text-charcoal/70">
-			The page you were looking for isn't here &mdash; misfiled, moved, or never catalogued in the
-			first place. Let's get you back to a fuller shelf.
+	<main class="mx-auto max-w-2xl px-6 py-24 sm:py-32">
+		<!-- The shell echo is filled in with the real path on the client. -->
+		<p class="font-mono text-xs text-charcoal/45">
+			<span aria-hidden="true">$ </span>cd <span id="missing-path">this-page</span>
+			<br />
+			<span class="text-charcoal/60">cd: no such file or directory</span>
 		</p>
 
-		<div class="mt-9 flex flex-wrap items-center justify-center gap-3">
-			<a
-				href="/"
-				class="inline-flex items-center gap-2 rounded-full bg-forest px-5 py-2 text-sm font-semibold text-paper transition-opacity hover:opacity-90"
-			>
-				Back home
+		<h1 class="mt-8 font-serif text-7xl leading-none tracking-tight text-charcoal sm:text-8xl">
+			404
+		</h1>
+		<p class="mt-6 font-serif text-2xl leading-snug text-charcoal sm:text-3xl">
+			You've wandered off the trail.
+		</p>
+		<p class="mt-4 max-w-md text-lg leading-relaxed text-charcoal/65">
+			No path on this map leads here. The page may have moved, or it was never charted in the first
+			place.
+		</p>
+
+		<nav class="mt-10 flex flex-wrap gap-x-8 gap-y-3 font-mono text-sm" aria-label="Back to the map">
+			<a href="/" class="group text-charcoal">
+				<span class="log-link">cd ~</span>
+				<span class="ml-1.5 text-charcoal/30 transition-colors group-hover:text-charcoal" aria-hidden="true">
+					-&gt;</span
+				>
 			</a>
-			<a
-				href="/blog"
-				class="inline-flex items-center gap-2 rounded-full border border-charcoal/20 px-5 py-2 text-sm font-semibold text-charcoal/75 transition-colors hover:border-forest/50 hover:text-forest"
-			>
-				Browse the blog
+			<a href="/blog" class="group text-charcoal">
+				<span class="log-link">ls ~/blog</span>
+				<span class="ml-1.5 text-charcoal/30 transition-colors group-hover:text-charcoal" aria-hidden="true">
+					-&gt;</span
+				>
 			</a>
-		</div>
+		</nav>
 	</main>
 </Layout>
+
+<script>
+	const el = document.getElementById('missing-path');
+	if (el) {
+		let path = location.pathname;
+		try {
+			path = decodeURIComponent(path);
+		} catch {}
+		el.textContent = `~${path.replace(/\/$/, '')}`;
+	}
+</script>

@@ -119,13 +119,13 @@ const selectClass =
 					Annual Training Volume
 				</h2>
 				<div class="flex flex-wrap gap-4 text-xs text-charcoal/60">
-					<span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-full bg-rust"></span>Run</span>
-					<span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-full bg-forest"></span>Ride</span>
-					<span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-full bg-charcoal"></span>Swim</span>
-					<span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-full" style="background:#cfc9bd"></span>Other</span>
+					<span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-full" style="background:var(--chart-run)"></span>Run</span>
+					<span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-full" style="background:var(--chart-ride)"></span>Ride</span>
+					<span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-full" style="background:var(--chart-swim)"></span>Swim</span>
+					<span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-full" style="background:var(--chart-other)"></span>Other</span>
 				</div>
 			</div>
-			<p class="mb-4 text-sm text-charcoal/55">Hours per year, stacked by discipline.</p>
+			<p id="volume-caption" class="mb-4 text-sm text-charcoal/55">Hours per year, stacked by discipline.</p>
 			<div id="chart-volume" class="w-full"></div>
 		</section>
 
@@ -174,18 +174,32 @@ const selectClass =
 	const activities = summary.activities as Activity[];
 	const range = summary.range;
 
-	const css = getComputedStyle(document.documentElement);
-	const cv = (name: string, fallback: string) => css.getPropertyValue(name).trim() || fallback;
-	const COLORS: Record<string, string> = {
-		Run: cv('--color-rust', '#a8471f'),
-		Ride: cv('--color-forest', '#2f4a3d'),
-		Swim: cv('--color-charcoal', '#2b2b2b'),
-		Other: '#cfc9bd',
+	// Chart palette lives in global.css (--chart-*), with light/dark variants;
+	// re-read on every render so a theme toggle recolours the charts.
+	const COLORS: Record<string, string> = {};
+	let CHARCOAL = '';
+	let PAPER = '';
+	let FOREST = '';
+	let AXIS = ''; // axis labels: ink at 55%
+	let GRID = ''; // gridlines: ink at 8%
+	const inkAt = (opacity: number) => {
+		const c = d3.color(CHARCOAL);
+		return c ? c.copy({ opacity }).formatRgb() : `rgba(43,43,43,${opacity})`;
 	};
-	const CHARCOAL = cv('--color-charcoal', '#2b2b2b');
-	const PAPER = cv('--color-paper', '#f7f5f0');
-	const FOREST = cv('--color-forest', '#2f4a3d');
-	const AXIS = 'rgba(43,43,43,0.55)';
+	const readColors = () => {
+		const s = getComputedStyle(document.documentElement);
+		const v = (name: string, fallback: string) => s.getPropertyValue(name).trim() || fallback;
+		COLORS.Run = v('--chart-run', '#b5563f');
+		COLORS.Ride = v('--chart-ride', '#4a7196');
+		COLORS.Swim = v('--chart-swim', '#3f8a7e');
+		COLORS.Other = v('--chart-other', '#a19d96');
+		CHARCOAL = v('--color-charcoal', '#131313');
+		PAPER = v('--color-paper', '#ffffff');
+		FOREST = v('--color-forest', '#1a1a1a');
+		AXIS = inkAt(0.55);
+		GRID = inkAt(0.08);
+	};
+	readColors();
 	const DISCIPLINES = ['Run', 'Ride', 'Swim', 'Other'];
 	const nf = new Intl.NumberFormat('en-US');
 
@@ -292,14 +306,26 @@ const selectClass =
 			.join('');
 	}
 
+	// Training volume as stacked terrain: one filled layer per discipline, with
+	// a ridge line along each top edge, like an elevation profile. Years run
+	// along the x-axis; with a single year selected it switches to months.
+	const MONTH_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 	function renderVolume(f: Activity[]) {
 		const el = document.getElementById('chart-volume')!;
 		el.innerHTML = '';
 		const yearsPresent = [...new Set(f.map((a) => a.y))].sort((a, b) => a - b);
+		const caption = document.getElementById('volume-caption');
 		if (!yearsPresent.length) return emptyState('chart-volume', 'No activities for this selection.');
-		const rows = yearsPresent.map((year) => {
-			const row: any = { year, Run: 0, Ride: 0, Swim: 0, Other: 0 };
-			for (const a of f) if (a.y === year) row[a.t] += a.s / 3600;
+		const byMonth = yearsPresent.length === 1;
+		if (caption)
+			caption.textContent = byMonth
+				? `Hours per month in ${yearsPresent[0]}, stacked by discipline.`
+				: 'Hours per year, stacked by discipline.';
+		const buckets = byMonth ? d3.range(1, 13) : yearsPresent;
+		const keys = ['Run', 'Ride', 'Swim', 'Other'];
+		const rows = buckets.map((b) => {
+			const row: any = { b, Run: 0, Ride: 0, Swim: 0, Other: 0 };
+			for (const a of f) if ((byMonth ? a.m : a.y) === b) row[a.t] += a.s / 3600;
 			return row;
 		});
 		const width = el.clientWidth;
@@ -307,23 +333,38 @@ const selectClass =
 		const margin = { top: 10, right: 12, bottom: 28, left: 40 };
 		const iw = width - margin.left - margin.right;
 		const ih = height - margin.top - margin.bottom;
-		const keys = ['Run', 'Ride', 'Swim', 'Other'];
+		const narrow = width < 520;
+		const label = (b: number) => (byMonth ? MONTH_SHORT[b - 1] : narrow ? `'${String(b).slice(2)}` : String(b));
 		const stack = d3.stack().keys(keys)(rows as any);
-		const x = d3.scaleBand().domain(rows.map((d) => String(d.year))).range([0, iw]).padding(0.22);
+		const x = d3.scalePoint<number>().domain(buckets).range([0, iw]).padding(0.25);
 		const yMax = d3.max(rows, (d: any) => keys.reduce((s, k) => s + d[k], 0)) || 1;
 		const y = d3.scaleLinear().domain([0, yMax]).nice().range([ih, 0]);
 		const svg = d3.select(el).append('svg').attr('width', '100%').attr('height', height).attr('viewBox', `0 0 ${width} ${height}`);
 		const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
-		g.append('g').attr('color', 'rgba(43,43,43,0.08)').call(d3.axisLeft(y).ticks(5).tickSize(-iw).tickFormat(() => '') as any).call((s) => s.select('.domain').remove());
-		g.selectAll('g.layer').data(stack).join('g').attr('class', 'layer').attr('fill', (d: any) => COLORS[d.key])
-			.selectAll('rect').data((d: any) => d.map((seg: any) => ({ ...seg, key: d.key }))).join('rect')
-			.attr('x', (d: any) => x(String(d.data.year))!).attr('y', (d: any) => y(d[1]))
-			.attr('height', (d: any) => Math.max(0, y(d[0]) - y(d[1]))).attr('width', x.bandwidth()).attr('rx', 1)
-			.on('mousemove', (event: MouseEvent, d: any) => {
-				const r = d.data;
-				showTip(`<strong>${r.year}</strong><br>Run ${r.Run.toFixed(1)}h · Ride ${r.Ride.toFixed(1)}h<br>Swim ${r.Swim.toFixed(1)}h · Other ${r.Other.toFixed(1)}h`, event);
-			}).on('mouseleave', hideTip);
-		g.append('g').attr('transform', `translate(0,${ih})`).attr('color', AXIS).call(d3.axisBottom(x).tickSize(0).tickPadding(8) as any).call((s) => s.select('.domain').remove()).selectAll('text').attr('font-size', '10px');
+		g.append('g').attr('color', GRID).call(d3.axisLeft(y).ticks(5).tickSize(-iw).tickFormat(() => '') as any).call((s) => s.select('.domain').remove());
+
+		const area = d3.area<any>().x((d) => x(d.data.b)!).y0((d) => y(d[0])).y1((d) => y(d[1])).curve(d3.curveMonotoneX);
+		const ridge = d3.line<any>().x((d) => x(d.data.b)!).y((d) => y(d[1])).curve(d3.curveMonotoneX);
+		const layers = g.selectAll('g.layer').data(stack).join('g').attr('class', 'layer');
+		layers.append('path').attr('d', (d: any) => area(d)).attr('fill', (d: any) => COLORS[d.key]).attr('fill-opacity', 0.72);
+		layers.append('path').attr('d', (d: any) => ridge(d)).attr('fill', 'none').attr('stroke', (d: any) => COLORS[d.key]).attr('stroke-width', 1.5).attr('stroke-linejoin', 'round');
+
+		// Hover: a dashed guide at the nearest bucket, with the breakdown.
+		const guide = g.append('line').attr('y1', 0).attr('y2', ih).attr('stroke', CHARCOAL).attr('stroke-opacity', 0.4).attr('stroke-dasharray', '2 3').style('opacity', 0);
+		const step = buckets.length > 1 ? x(buckets[1])! - x(buckets[0])! : iw;
+		g.selectAll('rect.hit').data(rows).join('rect').attr('class', 'hit')
+			.attr('x', (d: any) => x(d.b)! - step / 2).attr('y', 0).attr('width', step).attr('height', ih).attr('fill', 'transparent')
+			.on('mousemove', (event: MouseEvent, r: any) => {
+				guide.attr('x1', x(r.b)!).attr('x2', x(r.b)!).style('opacity', 1);
+				const name = byMonth ? `${MONTH_SHORT[r.b - 1]} ${yearsPresent[0]}` : String(r.b);
+				showTip(`<strong>${name}</strong><br>Run ${r.Run.toFixed(1)}h · Ride ${r.Ride.toFixed(1)}h<br>Swim ${r.Swim.toFixed(1)}h · Other ${r.Other.toFixed(1)}h`, event);
+			})
+			.on('mouseleave', () => {
+				guide.style('opacity', 0);
+				hideTip();
+			});
+
+		g.append('g').attr('transform', `translate(0,${ih})`).attr('color', AXIS).call(d3.axisBottom(x).tickSize(0).tickPadding(8).tickFormat((d) => label(d as number)) as any).call((s) => s.select('.domain').remove()).selectAll('text').attr('font-size', '10px');
 		g.append('g').attr('color', AXIS).call(d3.axisLeft(y).ticks(5).tickSize(0).tickPadding(6).tickFormat((d) => `${d}h`) as any).call((s) => s.select('.domain').remove()).selectAll('text').attr('font-size', '10px');
 	}
 
@@ -378,7 +419,7 @@ const selectClass =
 		const y = d3.scaleLinear().domain([ext[0] - pad, ext[1] + pad]).range(invert ? [0, ih] : [ih, 0]);
 		const svg = d3.select(el).append('svg').attr('width', '100%').attr('height', height).attr('viewBox', `0 0 ${width} ${height}`);
 		const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
-		g.append('g').attr('color', 'rgba(43,43,43,0.08)').call(d3.axisLeft(y).ticks(4).tickSize(-iw).tickFormat(() => '') as any).call((s) => s.select('.domain').remove());
+		g.append('g').attr('color', GRID).call(d3.axisLeft(y).ticks(4).tickSize(-iw).tickFormat(() => '') as any).call((s) => s.select('.domain').remove());
 		if (series.length > 1) {
 			const line = d3.line<any>().x((d) => x(d.year)!).y((d) => y(d.val)).curve(d3.curveMonotoneX);
 			g.append('path').datum(series).attr('fill', 'none').attr('stroke', color).attr('stroke-width', 2).attr('d', line);
@@ -414,6 +455,8 @@ const selectClass =
 	}
 
 	function renderAll() {
+		readColors();
+		tip.style('background', CHARCOAL).style('color', PAPER);
 		const f = getFiltered();
 		renderFilterSummary(f);
 		renderKpis(f);
@@ -431,6 +474,12 @@ const selectClass =
 		state.year = state.month = state.type = 'all';
 		yearSel.value = monthSel.value = typeSel.value = 'all';
 		renderAll();
+	});
+
+	// Recolour when the theme toggle flips light/dark.
+	new MutationObserver(renderAll).observe(document.documentElement, {
+		attributes: true,
+		attributeFilter: ['data-theme'],
 	});
 
 	let t: number;
